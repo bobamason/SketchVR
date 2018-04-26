@@ -20,15 +20,15 @@ import java.util.List;
  * Created by Bob Mason on 2/9/2018.
  */
 
-public class ModelingProjectEntity extends Entity {
+public class SketchProjectEntity extends Entity {
 
     private AABBTree aabbTree;
 
-    public ModelingProjectEntity() {
+    public SketchProjectEntity() {
         this(null);
     }
 
-    public ModelingProjectEntity(@Nullable List<EditableNode> nodes) {
+    public SketchProjectEntity(@Nullable List<EditableNode> nodes) {
         super(new ModelInstance(new Model()));
         aabbTree = new AABBTree();
         if (nodes != null && !nodes.isEmpty()) {

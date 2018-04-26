@@ -2,7 +2,7 @@ package net.masonapps.sketchvr.modeling.ui;
 
 import com.badlogic.gdx.math.collision.Ray;
 
-import net.masonapps.sketchvr.modeling.ModelingProjectEntity;
+import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 /**
  * Created by Bob Mason on 3/19/2018.
@@ -12,7 +12,7 @@ public class FreeDrawInput extends ModelingInputProcessor {
 
     private float drawDistance = 3f;
 
-    public FreeDrawInput(ModelingProjectEntity modelingProject) {
+    public FreeDrawInput(SketchProjectEntity modelingProject) {
         super(modelingProject);
     }
 

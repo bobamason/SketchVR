@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 
-import net.masonapps.sketchvr.modeling.ModelingProjectEntity;
+import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.gfx.AABBTree;
 import org.masonapps.libgdxgooglevr.input.VrInputProcessor;
@@ -17,12 +17,12 @@ import org.masonapps.libgdxgooglevr.input.VrInputProcessor;
 
 public abstract class ModelingInputProcessor implements VrInputProcessor {
 
-    protected final ModelingProjectEntity modelingProject;
+    protected final SketchProjectEntity modelingProject;
     protected final AABBTree.IntersectionInfo intersectionInfo = new AABBTree.IntersectionInfo();
     protected boolean isCursorOver = false;
     protected boolean visible = true;
 
-    public ModelingInputProcessor(ModelingProjectEntity modelingProject) {
+    public ModelingInputProcessor(SketchProjectEntity modelingProject) {
         this.modelingProject = modelingProject;
     }
 

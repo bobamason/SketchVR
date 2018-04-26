@@ -15,10 +15,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import net.masonapps.sketchvr.R;
 import net.masonapps.sketchvr.Style;
 import net.masonapps.sketchvr.modeling.EditableNode;
-import net.masonapps.sketchvr.modeling.primitives.Primitives;
 import net.masonapps.sketchvr.ui.ColorPickerSimple;
 import net.masonapps.sketchvr.ui.ConfirmDialog;
-import net.masonapps.sketchvr.ui.PrimitiveSelector;
 import net.masonapps.sketchvr.ui.VerticalImageTextButton;
 
 import org.masonapps.libgdxgooglevr.math.CylindricalCoordinate;
@@ -41,7 +39,6 @@ public class MainInterface extends CylindricalWindowUiContainer {
     private final WindowTableVR mainTable;
     private final ColorPickerSimple colorPicker;
     private final ConfirmDialog confirmDialog;
-    private final PrimitiveSelector primitiveSelector;
     private final ViewControls viewControls;
     private final Container<Table> container;
     private final Table emptyTable;
@@ -62,13 +59,11 @@ public class MainInterface extends CylindricalWindowUiContainer {
         mainTable = new WindowTableVR(spriteBatch, skin, 200, 200, Style.createWindowVrStyle(skin));
         colorPicker = new ColorPickerSimple(skin, 448, 448);
         confirmDialog = new ConfirmDialog(spriteBatch, skin);
-        primitiveSelector = new PrimitiveSelector(spriteBatch, skin, Primitives.createListItems());
         viewControls = new ViewControls(spriteBatch, skin, Style.createWindowVrStyle(skin));
         editModeTable = new EditModeTable(skin);
         editModeTable.setListener(this::editModeChanged);
         initMainTable();
         initConfirmDialog();
-        initShapeSelector();
         initViewControls();
     }
 
@@ -115,7 +110,7 @@ public class MainInterface extends CylindricalWindowUiContainer {
         addBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                showShapeSelector((item) -> eventListener.onAddClicked(item.primitiveKey));
+                //todo add work plane
             }
         });
         buttonBarTable.add(addBtn).padTop(PADDING).padLeft(PADDING).padBottom(PADDING).padRight(PADDING);
@@ -214,18 +209,6 @@ public class MainInterface extends CylindricalWindowUiContainer {
         confirmDialog.setMessage(msg);
         confirmDialog.setListener(consumer);
         confirmDialog.show();
-    }
-
-    private void initShapeSelector() {
-        primitiveSelector.setVisible(false);
-        primitiveSelector.setBackground(skin.newDrawable(Style.Drawables.window, Style.COLOR_WINDOW));
-        primitiveSelector.setPosition(new CylindricalCoordinate(getRadius(), 90f, 0f, CylindricalCoordinate.AngleMode.degrees).toCartesian());
-        addProcessor(primitiveSelector);
-    }
-
-    private void showShapeSelector(PrimitiveSelector.OnPrimitiveItemClickedListener listener) {
-        primitiveSelector.setListener(listener);
-        primitiveSelector.show();
     }
 
     private void initViewControls() {

@@ -1,7 +1,7 @@
 package net.masonapps.sketchvr.modeling.ui;
 
 import net.masonapps.sketchvr.modeling.EditableNode;
-import net.masonapps.sketchvr.modeling.ModelingProjectEntity;
+import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,7 @@ public class MultiNodeSelector extends ModelingInputProcessor {
     private final OnSelectionChangedListener listener;
     private List<EditableNode> selectedNodes = new ArrayList<>();
 
-    public MultiNodeSelector(ModelingProjectEntity modelingProject, OnSelectionChangedListener listener) {
+    public MultiNodeSelector(SketchProjectEntity modelingProject, OnSelectionChangedListener listener) {
         super(modelingProject);
         this.listener = listener;
     }

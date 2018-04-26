@@ -16,7 +16,7 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.google.vr.sdk.controller.Controller;
 
 import net.masonapps.sketchvr.modeling.EditableNode;
-import net.masonapps.sketchvr.modeling.ModelingProjectEntity;
+import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.input.DaydreamButtonEvent;
 import org.masonapps.libgdxgooglevr.input.DaydreamControllerInputListener;
@@ -35,7 +35,7 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
     private EditableNode previewNode = null;
     private float distance = 3f;
 
-    public AddNodeInput(ModelingProjectEntity modelingProject, OnNodeAddedListener listener) {
+    public AddNodeInput(SketchProjectEntity modelingProject, OnNodeAddedListener listener) {
         super(modelingProject);
         this.listener = listener;
         modelInstance = new ModelInstance(new Model());

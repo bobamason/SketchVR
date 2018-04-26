@@ -3,7 +3,7 @@ package net.masonapps.sketchvr.modeling.ui;
 import android.support.annotation.Nullable;
 
 import net.masonapps.sketchvr.modeling.EditableNode;
-import net.masonapps.sketchvr.modeling.ModelingProjectEntity;
+import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 /**
  * Created by Bob Mason on 3/19/2018.
@@ -15,7 +15,7 @@ public class SingleNodeSelector extends ModelingInputProcessor {
     @Nullable
     private EditableNode selectedNode = null;
 
-    public SingleNodeSelector(ModelingProjectEntity modelingProject, OnNodeSelectedListener listener) {
+    public SingleNodeSelector(SketchProjectEntity modelingProject, OnNodeSelectedListener listener) {
         super(modelingProject);
         this.listener = listener;
     }

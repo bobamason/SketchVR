@@ -13,7 +13,7 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 
 import net.masonapps.sketchvr.math.PathUtils;
-import net.masonapps.sketchvr.modeling.ModelingProjectEntity;
+import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.input.VrInputProcessor;
 
@@ -29,14 +29,14 @@ public class PlanarPointsInput implements VrInputProcessor {
     //    private final Vector2 hitPoint2D = new Vector2();
     private final Vector3 point = new Vector3();
     private final Vector3 hitPoint3D = new Vector3();
-    private final ModelingProjectEntity project;
+    private final SketchProjectEntity project;
     private final OnPointAddedListener listener;
     protected boolean isCursorOver = false;
     private Ray transformedRay = new Ray();
     // TODO: 3/23/2018 remove spline test 
     private BSpline<Vector3> spline = new BSpline<>();
 
-    public PlanarPointsInput(ModelingProjectEntity project, OnPointAddedListener listener) {
+    public PlanarPointsInput(SketchProjectEntity project, OnPointAddedListener listener) {
         this.project = project;
         this.listener = listener;
     }

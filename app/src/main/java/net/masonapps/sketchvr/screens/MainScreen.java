@@ -50,7 +50,7 @@ import net.masonapps.sketchvr.math.Animator;
 import net.masonapps.sketchvr.math.RotationUtil;
 import net.masonapps.sketchvr.math.Side;
 import net.masonapps.sketchvr.modeling.EditableNode;
-import net.masonapps.sketchvr.modeling.ModelingProjectEntity;
+import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.modeling.transform.RotateWidget;
 import net.masonapps.sketchvr.modeling.transform.ScaleWidget;
 import net.masonapps.sketchvr.modeling.transform.SimpleGrabControls;
@@ -126,7 +126,7 @@ private InputMode currentInputMode = InputMode.VIEW;
     @Nullable
     private EditableNode selectedNode = null;
     private List<EditableNode> multiSelectNodes = new ArrayList<>();
-    private ModelingProjectEntity modelingProject;
+    private SketchProjectEntity modelingProject;
     private Vector3 hitPoint = new Vector3();
     private AABBTree.IntersectionInfo intersectionInfo = new AABBTree.IntersectionInfo();
     private SimpleGrabControls grabControls = new SimpleGrabControls();
@@ -156,7 +156,7 @@ private InputMode currentInputMode = InputMode.VIEW;
         gridFloor = new Grid(2, skin.getRegion(Style.Drawables.grid), Color.LIGHT_GRAY);
 
         setBackgroundColor(Color.SKY);
-        modelingProject = new ModelingProjectEntity();
+        modelingProject = new SketchProjectEntity();
         undoRedoCache = new UndoRedoCache();
 
         final ModelBuilder modelBuilder = new ModelBuilder();
@@ -822,7 +822,7 @@ private InputMode currentInputMode = InputMode.VIEW;
         }
     }
 
-    public ModelingProjectEntity getModelingProject() {
+    public SketchProjectEntity getModelingProject() {
         return modelingProject;
     }
 

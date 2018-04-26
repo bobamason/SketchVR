@@ -12,7 +12,7 @@ import net.masonapps.sketchvr.actions.TransformAction;
 import net.masonapps.sketchvr.math.RotationUtil;
 import net.masonapps.sketchvr.math.SnapUtil;
 import net.masonapps.sketchvr.modeling.EditableNode;
-import net.masonapps.sketchvr.modeling.ModelingProjectEntity;
+import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.GdxVr;
 import org.masonapps.libgdxgooglevr.vr.ArmModel;
@@ -38,7 +38,7 @@ public class SimpleGrabControls {
     @Nullable
     private TransformWidget3D.OnTransformActionListener listener = null;
 
-    public void begin(EditableNode node, Vector3 hitPoint, ModelingProjectEntity modelingProject2) {
+    public void begin(EditableNode node, Vector3 hitPoint, SketchProjectEntity modelingProject2) {
         this.node = node;
         if (listener != null)
             listener.onTransformStarted(node);
@@ -59,7 +59,7 @@ public class SimpleGrabControls {
 //        Logger.d("plane = " + plane.toString());
     }
 
-    public boolean update(Vector3 outHitPoint, ModelingProjectEntity modelingProject2) {
+    public boolean update(Vector3 outHitPoint, SketchProjectEntity modelingProject2) {
         if (node != null) {
             final ArmModel armModel = GdxVr.input.getArmModel();
             ray.set(GdxVr.input.getInputRay());

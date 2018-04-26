@@ -33,9 +33,7 @@ import com.google.vr.sdk.controller.Controller;
 
 import net.masonapps.sketchvr.io.ProjectFileIO;
 import net.masonapps.sketchvr.modeling.EditableNode;
-import net.masonapps.sketchvr.modeling.ModelingProjectEntity;
-import net.masonapps.sketchvr.modeling.primitives.AssetPrimitive;
-import net.masonapps.sketchvr.modeling.primitives.Primitives;
+import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.screens.LoadingScreen;
 import net.masonapps.sketchvr.screens.MainScreen;
 import net.masonapps.sketchvr.screens.OpenProjectListScreen;
@@ -131,28 +129,7 @@ public class SolidModelingGame extends VrGame {
 
             setScreen(progressLoadingScreen);
             setLoadingScreenMessage("initializing shapes");
-
-            initShapes();
-        }
-    }
-
-    private void initShapes() {
-
-        CompletableFuture.runAsync(() ->
-                Primitives.getMap().values()
-                        .forEach(primitive -> {
-                            if (primitive instanceof AssetPrimitive) {
-                                final android.content.res.AssetManager assets = GdxVr.app.getActivityWeakReference().get().getAssets();
-                                try {
-                                    primitive.initialize(assets.open(((AssetPrimitive) primitive).getAsset()));
-                                } catch (Exception e) {
-                                    Logger.e("unable to load primitive " + primitive.getName(), e);
-                                }
-                            } else {
-                                primitive.initialize(null);
-                            }
-                        }))
-                .thenRun(() -> GdxVr.app.postRunnable(this::switchToStartupScreen));
+            }
     }
 
     @Override
@@ -269,7 +246,7 @@ public class SolidModelingGame extends VrGame {
     }
 
     @SuppressWarnings("ConstantConditions")
-    private void saveCurrentProject(final ModelingProjectEntity modelingProject, final String projectName) {
+    private void saveCurrentProject(final SketchProjectEntity modelingProject, final String projectName) {
         Log.d(Constants.APP_NAME, "saving project " + projectName + "...");
         Activity activity = GdxVr.app.getActivityWeakReference().get();
         if (activity != null) {
@@ -290,7 +267,7 @@ public class SolidModelingGame extends VrGame {
 
     @SuppressWarnings({"ResultOfMethodCallIgnored", "ConstantConditions"})
     @SuppressLint({"SetWorldReadable", "SetWorldWritable"})
-    public void exportFile(final ModelingProjectEntity modelingProject, final String projectName, final String fileType, Matrix4 transform) {
+    public void exportFile(final SketchProjectEntity modelingProject, final String projectName, final String fileType, Matrix4 transform) {
         Activity activity = GdxVr.app.getActivityWeakReference().get();
         if (activity == null || modelingScreen == null) return;
         if (!((MainActivity) activity).areStoragePermissionsGranted()) {
