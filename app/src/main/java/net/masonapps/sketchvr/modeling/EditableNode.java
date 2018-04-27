@@ -14,7 +14,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
-import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
@@ -23,13 +22,9 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Pools;
 
 import net.masonapps.sketchvr.actions.TransformAction;
-import net.masonapps.sketchvr.bvh.BVH;
-import net.masonapps.sketchvr.bvh.BVHBuilder;
 import net.masonapps.sketchvr.io.Base64Utils;
 import net.masonapps.sketchvr.io.JsonUtils;
 import net.masonapps.sketchvr.mesh.MeshInfo;
-import net.masonapps.sketchvr.mesh.Triangle;
-import net.masonapps.sketchvr.mesh.Vertex;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -58,18 +53,14 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
     public static final String KEY_SPECULAR = "specular";
     public static final String KEY_SHININESS = "shininess";
     protected final Matrix4 inverseTransform = new Matrix4();
-    @Nullable
-    protected final MeshInfo meshInfo;
-    @Nullable
-    private final BVH bvh;
     private final Ray transformedRay = new Ray();
     private final boolean isGroup;
+    private final MeshInfo meshInfo;
     protected BoundingBox bounds = new BoundingBox();
     private boolean updated = false;
     @Nullable
     private AABBTree.Node node = null;
     private BoundingBox aabb = new BoundingBox();
-    private BVH.IntersectionInfo bvhIntersection = new BVH.IntersectionInfo();
     private Color ambientColor = new Color(Color.GRAY);
     private Color diffuseColor = new Color(Color.GRAY);
     private Color specularColor = new Color(0x3f3f3fff);
@@ -78,14 +69,12 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
     public EditableNode() {
         super();
         meshInfo = null;
-        bvh = null;
         isGroup = true;
     }
 
-    public EditableNode(@NonNull MeshInfo meshInfo, @NonNull BVH bvh) {
+    public EditableNode(@NonNull MeshInfo meshInfo) {
         super();
         this.meshInfo = meshInfo;
-        this.bvh = bvh;
         isGroup = false;
     }
 
@@ -103,7 +92,7 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
             }
         } else if (primitiveKey.equals(KEY_MESH) && jsonObject.has(KEY_MESH)) {
                 final MeshInfo meshInfo = parseMesh(jsonObject.getJSONObject(KEY_MESH));
-                editableNode = new EditableNode(meshInfo, buildBVH(meshInfo));
+            editableNode = new EditableNode(meshInfo);
         } else {
             return null;
         }
@@ -121,24 +110,6 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         editableNode.scale.fromString(jsonObject.optString(KEY_SCALE, "(1.0,1.0,1.0)"));
         editableNode.calculateTransforms(true);
         return editableNode;
-    }
-
-    private static BVH buildBVH(MeshInfo meshInfo) {
-        final Triangle[] triangles = new Triangle[meshInfo.numIndices / 3];
-        final int vertexSize = meshInfo.vertexAttributes.vertexSize / Float.BYTES;
-        for (int i = 0; i < meshInfo.numIndices; i += 3) {
-            int i0 = meshInfo.indices[i] * vertexSize;
-            int i1 = meshInfo.indices[i + 1] * vertexSize;
-            int i2 = meshInfo.indices[i + 2] * vertexSize;
-            final Vertex v0 = new Vertex();
-            v0.position.set(meshInfo.vertices[i0], meshInfo.vertices[i0 + 1], meshInfo.vertices[i0 + 2]);
-            final Vertex v1 = new Vertex();
-            v0.position.set(meshInfo.vertices[i1], meshInfo.vertices[i1 + 1], meshInfo.vertices[i1 + 2]);
-            final Vertex v2 = new Vertex();
-            v0.position.set(meshInfo.vertices[i2], meshInfo.vertices[i2 + 1], meshInfo.vertices[i2 + 2]);
-            triangles[i / 3] = new Triangle(v0, v1, v2);
-        }
-        return new BVH(new BVHBuilder().build(triangles));
     }
 
     private static MeshInfo parseMesh(JSONObject jsonObject) throws JSONException {
@@ -207,22 +178,23 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
     @Override
     public boolean rayTest(Ray ray, AABBTree.IntersectionInfo intersection) {
         validate();
-        boolean rayTest;
-        intersection.normal.set(0, 0, 0);
-        transformedRay.set(ray).mul(inverseTransform);
-        if (isGroup || bvh == null)
-            rayTest = Intersector.intersectRayBounds(transformedRay, bounds, intersection.hitPoint);
-        else
-            rayTest = bvh.closestIntersection(transformedRay, bvhIntersection);
-        if (rayTest) {
-            intersection.hitPoint.set(bvhIntersection.hitPoint).mul(getTransform());
-            if (bvhIntersection.triangle != null)
-                intersection.normal.set(bvhIntersection.triangle.plane.normal).mul(getRotation());
-            else
-                intersection.normal.set(Vector3.Y);
-            intersection.object = this;
-            intersection.t = ray.origin.dst(intersection.hitPoint);
-        }
+        boolean rayTest = false;
+        // TODO: 4/27/2018 ray test shape or path
+//        intersection.normal.set(0, 0, 0);
+//        transformedRay.set(ray).mul(inverseTransform);
+//        if (isGroup || bvh == null)
+//            rayTest = Intersector.intersectRayBounds(transformedRay, bounds, intersection.hitPoint);
+//        else
+//            rayTest = bvh.closestIntersection(transformedRay, bvhIntersection);
+//        if (rayTest) {
+//            intersection.hitPoint.set(bvhIntersection.hitPoint).mul(getTransform());
+//            if (bvhIntersection.triangle != null)
+//                intersection.normal.set(bvhIntersection.triangle.plane.normal).mul(getRotation());
+//            else
+//                intersection.normal.set(Vector3.Y);
+//            intersection.object = this;
+//            intersection.t = ray.origin.dst(intersection.hitPoint);
+//        }
         return rayTest;
     }
 
@@ -261,8 +233,8 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         final EditableNode node;
         if (isGroup)
             node = new EditableNode();
-        else if (meshInfo != null && bvh != null)
-            node = new EditableNode(meshInfo, bvh);
+        else if (meshInfo != null)
+            node = new EditableNode(meshInfo);
         else 
             return null;
         node.translation.set(translation);
