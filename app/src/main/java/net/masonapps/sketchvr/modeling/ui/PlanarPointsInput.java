@@ -15,13 +15,11 @@ import com.badlogic.gdx.utils.Array;
 import net.masonapps.sketchvr.math.PathUtils;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
-import org.masonapps.libgdxgooglevr.input.VrInputProcessor;
-
 /**
  * Created by Bob Mason on 3/22/2018.
  */
 
-public class PlanarPointsInput implements VrInputProcessor {
+public class PlanarPointsInput extends ModelingInputProcessor {
 
     public static final int SPLINE_DEGREE = 2;
     private final Plane plane = new Plane();
@@ -29,7 +27,6 @@ public class PlanarPointsInput implements VrInputProcessor {
     //    private final Vector2 hitPoint2D = new Vector2();
     private final Vector3 point = new Vector3();
     private final Vector3 hitPoint3D = new Vector3();
-    private final SketchProjectEntity project;
     private final OnPointAddedListener listener;
     protected boolean isCursorOver = false;
     private Ray transformedRay = new Ray();
@@ -37,7 +34,7 @@ public class PlanarPointsInput implements VrInputProcessor {
     private BSpline<Vector3> spline = new BSpline<>();
 
     public PlanarPointsInput(SketchProjectEntity project, OnPointAddedListener listener) {
-        this.project = project;
+        super(project);
         this.listener = listener;
     }
 
@@ -78,6 +75,7 @@ public class PlanarPointsInput implements VrInputProcessor {
         return hitPoint3D;
     }
 
+    @Override
     public void draw(ShapeRenderer shapeRenderer) {
         if (points.size == 0) return;
         shapeRenderer.setColor(Color.WHITE);

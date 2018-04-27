@@ -621,14 +621,14 @@ private InputMode currentInputMode = InputMode.VIEW;
         shapeRenderer.begin();
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.setTransformMatrix(modelingProject.getTransform());
-//        AABBTree.debugAABBTree(shapeRenderer, modelingProject.getAABBTree(), Color.YELLOW);
+//        AABBTree.debugAABBTree(shapeRenderer, project.getAABBTree(), Color.YELLOW);
         transformUI.drawShapes(shapeRenderer);
         if (focusedNode != null) {
             drawEntityBounds(shapeRenderer, focusedNode, Color.BLACK);
         }
         if (selectedNode != null) {
             drawEntityBounds(shapeRenderer, selectedNode, Color.WHITE);
-//            debugBVH(shapeRenderer, modelingProject, Color.YELLOW);
+//            debugBVH(shapeRenderer, project, Color.YELLOW);
         }
         if (inputProcessorChooser.getActiveProcessor() instanceof MultiNodeSelector)
             drawSelectionBox(shapeRenderer, Color.WHITE);
@@ -651,8 +651,8 @@ private InputMode currentInputMode = InputMode.VIEW;
         modelingProject.setRotation(rotation);
         position.set(center).scl(-1).mul(rotation).add(projectPosition);
         modelingProject.setPosition(position);
-//        gridEntity.setPosition(modelingProject.getPosition());
-//        gridEntity.setRotation(modelingProject.getRotation());
+//        gridEntity.setPosition(project.getPosition());
+//        gridEntity.setRotation(project.getRotation());
         lastRotation.set(GdxVr.input.getControllerOrientation());
         Pools.free(rotDiff);
         transformUI.setTransform(modelingProject.getTransform());

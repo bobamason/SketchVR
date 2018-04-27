@@ -2,6 +2,7 @@ package net.masonapps.sketchvr.modeling.ui;
 
 import android.support.annotation.Nullable;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -17,20 +18,22 @@ import org.masonapps.libgdxgooglevr.input.VrInputProcessor;
 
 public abstract class ModelingInputProcessor implements VrInputProcessor {
 
-    protected final SketchProjectEntity modelingProject;
+    protected final SketchProjectEntity project;
     protected final AABBTree.IntersectionInfo intersectionInfo = new AABBTree.IntersectionInfo();
     protected boolean isCursorOver = false;
     protected boolean visible = true;
 
-    public ModelingInputProcessor(SketchProjectEntity modelingProject) {
-        this.modelingProject = modelingProject;
+    public ModelingInputProcessor(SketchProjectEntity project) {
+        this.project = project;
     }
 
     @Override
     public boolean performRayTest(Ray ray) {
-        isCursorOver = visible && modelingProject.rayTest(ray, intersectionInfo);
+        isCursorOver = visible && project.rayTest(ray, intersectionInfo);
         return isCursorOver;
     }
+
+    public abstract void draw(ShapeRenderer shapeRenderer);
 
     @Override
     public boolean isCursorOver() {

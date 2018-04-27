@@ -129,10 +129,10 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
                 case DaydreamButtonEvent.ACTION_DOWN:
                     if (previewNode != null) {
                         final EditableNode copy = previewNode.copy();
-                        previewNode.getPosition().mul(modelingProject.getInverseTransform());
-                        previewNode.getRotation().mul(new Quaternion(modelingProject.getRotation()).conjugate());
+                        previewNode.getPosition().mul(project.getInverseTransform());
+                        previewNode.getRotation().mul(new Quaternion(project.getRotation()).conjugate());
                         previewNode.invalidate();
-                        modelingProject.add(copy);
+                        project.add(copy);
                         listener.nodeAdded(copy);
                     }
                     break;
