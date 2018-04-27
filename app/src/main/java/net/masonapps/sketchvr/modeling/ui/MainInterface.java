@@ -14,7 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 import net.masonapps.sketchvr.R;
 import net.masonapps.sketchvr.Style;
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.ui.ColorPickerSimple;
 import net.masonapps.sketchvr.ui.ConfirmDialog;
 import net.masonapps.sketchvr.ui.VerticalImageTextButton;
@@ -44,7 +44,7 @@ public class MainInterface extends CylindricalWindowUiContainer {
     private final Table emptyTable;
     private EditModeTable editModeTable;
     @Nullable
-    private EditableNode entity = null;
+    private SketchNode entity = null;
     private EditModeTable.EditMode currentEditMode = EditModeTable.EditMode.NONE;
 
     public MainInterface(Batch spriteBatch, Skin skin, UiEventListener listener) {
@@ -260,7 +260,7 @@ public class MainInterface extends CylindricalWindowUiContainer {
         return viewControls;
     }
 
-    public void setEntity(@Nullable EditableNode entity) {
+    public void setEntity(@Nullable SketchNode entity) {
         this.entity = entity;
         if (entity == null)
             editModeChanged(EditModeTable.EditMode.NONE);

@@ -12,7 +12,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 import org.masonapps.libgdxgooglevr.gfx.Transformable;
 import org.masonapps.libgdxgooglevr.input.VrInputProcessor;
@@ -29,7 +29,7 @@ public abstract class TransformWidget3D extends Transformable implements VrInput
     protected List<DragHandle3D> processors;
     protected BoundingBox bounds = new BoundingBox();
     @Nullable
-    protected EditableNode entity = null;
+    protected SketchNode entity = null;
     private boolean isCursorOver = false;
     private Vector3 hitPoint = new Vector3();
     @Nullable
@@ -158,7 +158,7 @@ public abstract class TransformWidget3D extends Transformable implements VrInput
     }
 
     @CallSuper
-    public void setEntity(@Nullable EditableNode entity, Transformable transformable) {
+    public void setEntity(@Nullable SketchNode entity, Transformable transformable) {
         this.entity = entity;
         processors.forEach(processor -> processor.setTransformable(entity));
         if (this.entity != null) {
@@ -209,8 +209,8 @@ public abstract class TransformWidget3D extends Transformable implements VrInput
     }
 
     public interface OnTransformActionListener {
-        void onTransformStarted(@NonNull EditableNode entity);
+        void onTransformStarted(@NonNull SketchNode entity);
 
-        void onTransformFinished(@NonNull EditableNode entity);
+        void onTransformFinished(@NonNull SketchNode entity);
     }
 }

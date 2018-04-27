@@ -21,7 +21,7 @@ import net.masonapps.sketchvr.io.OBJWriter;
 import net.masonapps.sketchvr.io.PLYWriter;
 import net.masonapps.sketchvr.io.ProjectFileIO;
 import net.masonapps.sketchvr.io.STLWriter;
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 import org.json.JSONException;
 import org.masonapps.libgdxgooglevr.utils.Logger;
@@ -52,7 +52,7 @@ public class ExportService extends IntentService {
 
         Logger.d("service started");
 
-        final List<EditableNode> nodes = ((SolidModelingApplication) getApplication()).getModelingObjects();
+        final List<SketchNode> nodes = ((SolidModelingApplication) getApplication()).getModelingObjects();
         final Matrix4 transform = new Matrix4(((SolidModelingApplication) getApplication()).getTransform());
         Logger.d("export transform:\n" + transform);
         if (nodes == null)

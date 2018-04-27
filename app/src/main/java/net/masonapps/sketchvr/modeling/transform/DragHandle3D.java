@@ -11,7 +11,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 import org.masonapps.libgdxgooglevr.gfx.Entity;
 
@@ -25,7 +25,7 @@ public abstract class DragHandle3D extends Entity {
     private final Vector3 hitPoint = new Vector3();
     protected boolean dragging = false;
     @Nullable
-    protected EditableNode transformable = null;
+    protected SketchNode transformable = null;
     private boolean isCursorOver = false;
     private Matrix4 parentTransform = new Matrix4();
 
@@ -146,7 +146,7 @@ public abstract class DragHandle3D extends Entity {
         return transformable != null;
     }
 
-    public void setTransformable(@Nullable EditableNode transformable) {
+    public void setTransformable(@Nullable SketchNode transformable) {
         this.transformable = transformable;
     }
 

@@ -7,7 +7,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,7 +24,7 @@ import java.util.Locale;
 
 public class STLWriter {
 
-    public static void writeToFile(File file, List<EditableNode> nodes, Matrix4 transform) throws IOException {
+    public static void writeToFile(File file, List<SketchNode> nodes, Matrix4 transform) throws IOException {
         writeToOutputStream(new FileOutputStream(file), nodes, transform);
     }
 
@@ -33,13 +33,13 @@ public class STLWriter {
     }
 
     @SuppressLint("DefaultLocale")
-    public static void writeToOutputStream(OutputStream outputStream, List<EditableNode> nodes, Matrix4 globalTransform) throws IOException {
+    public static void writeToOutputStream(OutputStream outputStream, List<SketchNode> nodes, Matrix4 globalTransform) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
         try {
             writer.write("solid");
             writer.newLine();
 
-            for (EditableNode node : nodes) {
+            for (SketchNode node : nodes) {
                 writeNode(writer, node, globalTransform);
             }
 
@@ -51,7 +51,7 @@ public class STLWriter {
         }
     }
 
-    public static void writeNode(BufferedWriter writer, EditableNode node, Matrix4 globalTransform) throws IOException {
+    public static void writeNode(BufferedWriter writer, SketchNode node, Matrix4 globalTransform) throws IOException {
         final Mesh mesh = node.parts.get(0).meshPart.mesh;
 
         final float[] vertices = new float[mesh.getNumVertices()];

@@ -22,23 +22,26 @@ import java.util.List;
 
 public class SketchProjectEntity extends Entity {
 
-    private AABBTree aabbTree;
+    private final AABBTree aabbTree;
+    private final SketchMeshBuilder builder;
 
     public SketchProjectEntity() {
         this(null);
     }
 
-    public SketchProjectEntity(@Nullable List<EditableNode> nodes) {
+    public SketchProjectEntity(@Nullable List<SketchNode> nodes) {
         super(new ModelInstance(new Model()));
         aabbTree = new AABBTree();
         if (nodes != null && !nodes.isEmpty()) {
-            for (EditableNode node : nodes)
+            for (SketchNode node : nodes)
                 add(node);
         }
+        builder = new SketchMeshBuilder();
+        modelInstance.model.meshes.add(builder.getMesh());
     }
 
 
-    public void add(EditableNode node) {
+    public void add(SketchNode node) {
         if (modelInstance == null) return;
         node.initMesh();
 
@@ -47,7 +50,6 @@ public class SketchProjectEntity extends Entity {
 
         final NodePart nodePart = node.parts.get(0);
         modelInstance.model.meshParts.add(nodePart.meshPart);
-        modelInstance.model.meshes.add(nodePart.meshPart.mesh);
 
         modelInstance.materials.add(nodePart.material);
         modelInstance.model.materials.add(nodePart.material);
@@ -59,7 +61,7 @@ public class SketchProjectEntity extends Entity {
     }
 
 
-    public void remove(EditableNode node) {
+    public void remove(SketchNode node) {
         if (modelInstance != null) {
 
             modelInstance.nodes.removeValue(node, true);
@@ -79,8 +81,8 @@ public class SketchProjectEntity extends Entity {
         if (modelInstance == null) return;
         for (int i = 0; i < modelInstance.nodes.size; i++) {
             final Node node = modelInstance.nodes.get(i);
-            if (node instanceof EditableNode)
-                ((EditableNode) node).validate();
+            if (node instanceof SketchNode)
+                ((SketchNode) node).validate();
         }
         validate();
     }

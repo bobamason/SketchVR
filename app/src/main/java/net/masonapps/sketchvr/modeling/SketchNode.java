@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
@@ -35,7 +36,7 @@ import org.masonapps.libgdxgooglevr.gfx.AABBTree;
  * Created by Bob Mason on 2/9/2018.
  */
 
-public class EditableNode extends Node implements AABBTree.AABBObject {
+public class SketchNode extends Node implements AABBTree.AABBObject {
 
     public static final String KEY_PRIMITIVE = "primitive";
     public static final String KEY_MESH = "mesh";
@@ -66,33 +67,33 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
     private Color specularColor = new Color(0x3f3f3fff);
     private float shininess = 8f;
 
-    public EditableNode() {
+    public SketchNode() {
         super();
         meshInfo = null;
         isGroup = true;
     }
 
-    public EditableNode(@NonNull MeshInfo meshInfo) {
+    public SketchNode(@NonNull MeshInfo meshInfo) {
         super();
         this.meshInfo = meshInfo;
         isGroup = false;
     }
 
-    public static EditableNode fromJSONObject(JSONObject jsonObject) throws JSONException {
+    public static SketchNode fromJSONObject(JSONObject jsonObject) throws JSONException {
         final String primitiveKey = jsonObject.optString(KEY_PRIMITIVE, KEY_GROUP);
-        final EditableNode editableNode;
+        final SketchNode sketchNode;
 
         if (primitiveKey.equals(KEY_GROUP)) {
-            editableNode = new EditableNode();
+            sketchNode = new SketchNode();
             final JSONArray children = jsonObject.getJSONArray(KEY_CHILDREN);
             if (children != null) {
                 for (int i = 0; i < children.length(); i++) {
-                    editableNode.addChild(fromJSONObject(children.getJSONObject(i)));
+                    sketchNode.addChild(fromJSONObject(children.getJSONObject(i)));
                 }
             }
         } else if (primitiveKey.equals(KEY_MESH) && jsonObject.has(KEY_MESH)) {
-                final MeshInfo meshInfo = parseMesh(jsonObject.getJSONObject(KEY_MESH));
-            editableNode = new EditableNode(meshInfo);
+            final MeshInfo meshInfo = parseMesh(jsonObject.getJSONObject(KEY_MESH));
+            sketchNode = new SketchNode(meshInfo);
         } else {
             return null;
         }
@@ -100,16 +101,16 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         final Color diffuse = Color.valueOf(jsonObject.optString(KEY_DIFFUSE, "7F7F7FFF"));
         final Color specular = Color.valueOf(jsonObject.optString(KEY_SPECULAR, "000000FF"));
         final float shininess = (float) jsonObject.optDouble(KEY_SHININESS, 8.);
-        editableNode.setAmbientColor(ambient);
-        editableNode.setDiffuseColor(diffuse);
-        editableNode.setSpecularColor(specular);
-        editableNode.setShininess(shininess);
-        editableNode.translation.fromString(jsonObject.optString(KEY_POSITION, "(0.0,0.0,0.0)"));
+        sketchNode.setAmbientColor(ambient);
+        sketchNode.setDiffuseColor(diffuse);
+        sketchNode.setSpecularColor(specular);
+        sketchNode.setShininess(shininess);
+        sketchNode.translation.fromString(jsonObject.optString(KEY_POSITION, "(0.0,0.0,0.0)"));
         final String rotationString = jsonObject.optString(KEY_ROTATION, "(0.0,0.0,0.0,1.0)");
-        editableNode.rotation.set(JsonUtils.quaternionFromString(rotationString));
-        editableNode.scale.fromString(jsonObject.optString(KEY_SCALE, "(1.0,1.0,1.0)"));
-        editableNode.calculateTransforms(true);
-        return editableNode;
+        sketchNode.rotation.set(JsonUtils.quaternionFromString(rotationString));
+        sketchNode.scale.fromString(jsonObject.optString(KEY_SCALE, "(1.0,1.0,1.0)"));
+        sketchNode.calculateTransforms(true);
+        return sketchNode;
     }
 
     private static MeshInfo parseMesh(JSONObject jsonObject) throws JSONException {
@@ -140,6 +141,7 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
     }
 
     public void initMesh() {
+        // TODO: 4/27/2018 fix 
         if (parts.size > 0 || meshInfo == null) return;
         final Mesh mesh = meshInfo.createMesh();
         final MeshPart meshPart = new MeshPart();
@@ -178,8 +180,8 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
     @Override
     public boolean rayTest(Ray ray, AABBTree.IntersectionInfo intersection) {
         validate();
-        boolean rayTest = false;
         // TODO: 4/27/2018 ray test shape or path
+        boolean rayTest;
 //        intersection.normal.set(0, 0, 0);
 //        transformedRay.set(ray).mul(inverseTransform);
 //        if (isGroup || bvh == null)
@@ -195,6 +197,12 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
 //            intersection.object = this;
 //            intersection.t = ray.origin.dst(intersection.hitPoint);
 //        }
+        rayTest = Intersector.intersectRayBounds(transformedRay, bounds, intersection.hitPoint);
+        if (rayTest) {
+            intersection.hitPoint.mul(getTransform());
+            intersection.object = this;
+            intersection.t = ray.origin.dst(intersection.hitPoint);
+        }
         return rayTest;
     }
 
@@ -219,8 +227,8 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
             bounds.inf();
             final Iterable<Node> children = getChildren();
             for (Node child : children) {
-                if (child instanceof EditableNode)
-                    bounds.ext(((EditableNode) child).getAABB());
+                if (child instanceof SketchNode)
+                    bounds.ext(((SketchNode) child).getAABB());
             }
         }
         aabb.set(bounds).mul(localTransform);
@@ -228,14 +236,14 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
     }
 
     @Override
-    public EditableNode copy() {
+    public SketchNode copy() {
         validate();
-        final EditableNode node;
+        final SketchNode node;
         if (isGroup)
-            node = new EditableNode();
+            node = new SketchNode();
         else if (meshInfo != null)
-            node = new EditableNode(meshInfo);
-        else 
+            node = new SketchNode(meshInfo);
+        else
             return null;
         node.translation.set(translation);
         node.rotation.set(rotation);
@@ -245,8 +253,8 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         if (isGroup) {
             final Iterable<Node> children = getChildren();
             for (Node child : children) {
-                if (child instanceof EditableNode)
-                    node.addChild(((EditableNode) child).copy());
+                if (child instanceof SketchNode)
+                    node.addChild(((SketchNode) child).copy());
             }
         }
         node.ambientColor.set(ambientColor);
@@ -324,8 +332,8 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
             final Iterable<Node> children = getChildren();
             JSONArray jsonArray = new JSONArray();
             for (Node child : children) {
-                if (child instanceof EditableNode)
-                    jsonArray.put(((EditableNode) child).toJSONObject());
+                if (child instanceof SketchNode)
+                    jsonArray.put(((SketchNode) child).toJSONObject());
             }
             jsonObject.put(KEY_CHILDREN, jsonArray);
         } else {
@@ -393,37 +401,37 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         setScale(s.x, s.y, s.z);
     }
 
-    public EditableNode setScale(float x, float y, float z) {
+    public SketchNode setScale(float x, float y, float z) {
         scale.set(x, y, z);
         invalidate();
         return this;
     }
 
-    public EditableNode scaleX(float x) {
+    public SketchNode scaleX(float x) {
         scale.x *= x;
         invalidate();
         return this;
     }
 
-    public EditableNode scaleY(float y) {
+    public SketchNode scaleY(float y) {
         scale.y *= y;
         invalidate();
         return this;
     }
 
-    public EditableNode scaleZ(float z) {
+    public SketchNode scaleZ(float z) {
         scale.z *= z;
         invalidate();
         return this;
     }
 
-    public EditableNode scale(float s) {
+    public SketchNode scale(float s) {
         scale.scl(s, s, s);
         invalidate();
         return this;
     }
 
-    public EditableNode scale(float x, float y, float z) {
+    public SketchNode scale(float x, float y, float z) {
         scale.scl(x, y, z);
         invalidate();
         return this;
@@ -433,7 +441,7 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return this.scale.x;
     }
 
-    public EditableNode setScaleX(float x) {
+    public SketchNode setScaleX(float x) {
         scale.x = x;
         invalidate();
         return this;
@@ -443,7 +451,7 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return this.scale.y;
     }
 
-    public EditableNode setScaleY(float y) {
+    public SketchNode setScaleY(float y) {
         scale.y = y;
         invalidate();
         return this;
@@ -453,31 +461,31 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return this.scale.z;
     }
 
-    public EditableNode setScaleZ(float z) {
+    public SketchNode setScaleZ(float z) {
         scale.z = z;
         invalidate();
         return this;
     }
 
-    public EditableNode setRotationX(float angle) {
+    public SketchNode setRotationX(float angle) {
         rotation.set(Vector3.X, angle);
         invalidate();
         return this;
     }
 
-    public EditableNode setRotationY(float angle) {
+    public SketchNode setRotationY(float angle) {
         rotation.set(Vector3.Y, angle);
         invalidate();
         return this;
     }
 
-    public EditableNode setRotationZ(float angle) {
+    public SketchNode setRotationZ(float angle) {
         rotation.set(Vector3.Z, angle);
         invalidate();
         return this;
     }
 
-    public EditableNode rotateX(float angle) {
+    public SketchNode rotateX(float angle) {
         final Quaternion rotator = Pools.obtain(Quaternion.class);
         rotator.set(Vector3.X, angle);
         rotation.mul(rotator);
@@ -486,7 +494,7 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return this;
     }
 
-    public EditableNode rotateY(float angle) {
+    public SketchNode rotateY(float angle) {
         final Quaternion rotator = Pools.obtain(Quaternion.class);
         rotator.set(Vector3.Y, angle);
         rotation.mul(rotator);
@@ -495,7 +503,7 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return this;
     }
 
-    public EditableNode rotateZ(float angle) {
+    public SketchNode rotateZ(float angle) {
         final Quaternion rotator = Pools.obtain(Quaternion.class);
         rotator.set(Vector3.Z, angle);
         rotation.mul(rotator);
@@ -504,13 +512,13 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return this;
     }
 
-    public EditableNode setRotation(float yaw, float pitch, float roll) {
+    public SketchNode setRotation(float yaw, float pitch, float roll) {
         rotation.setEulerAngles(yaw, pitch, roll);
         invalidate();
         return this;
     }
 
-    public EditableNode setRotation(Vector3 dir, Vector3 up) {
+    public SketchNode setRotation(Vector3 dir, Vector3 up) {
         final Vector3 tmp = Pools.obtain(Vector3.class);
         final Vector3 tmp2 = Pools.obtain(Vector3.class);
         tmp.set(up).crs(dir).nor();
@@ -522,7 +530,7 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return this;
     }
 
-    public EditableNode lookAt(Vector3 position, Vector3 up) {
+    public SketchNode lookAt(Vector3 position, Vector3 up) {
         final Vector3 dir = Pools.obtain(Vector3.class);
         dir.set(position).sub(this.translation).nor();
         setRotation(dir, up);
@@ -535,13 +543,13 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return rotation;
     }
 
-    public EditableNode setRotation(Quaternion q) {
+    public SketchNode setRotation(Quaternion q) {
         rotation.set(q);
         invalidate();
         return this;
     }
 
-    public EditableNode translateX(float units) {
+    public SketchNode translateX(float units) {
         this.translation.x += units;
         invalidate();
         return this;
@@ -551,13 +559,13 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return this.translation.x;
     }
 
-    public EditableNode setX(float x) {
+    public SketchNode setX(float x) {
         this.translation.x = x;
         invalidate();
         return this;
     }
 
-    public EditableNode translateY(float units) {
+    public SketchNode translateY(float units) {
         this.translation.y += units;
         invalidate();
         return this;
@@ -567,13 +575,13 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return this.translation.y;
     }
 
-    public EditableNode setY(float y) {
+    public SketchNode setY(float y) {
         this.translation.y = y;
         invalidate();
         return this;
     }
 
-    public EditableNode translateZ(float units) {
+    public SketchNode translateZ(float units) {
         this.translation.z += units;
         invalidate();
         return this;
@@ -583,25 +591,25 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return this.translation.z;
     }
 
-    public EditableNode setZ(float z) {
+    public SketchNode setZ(float z) {
         this.translation.z = z;
         invalidate();
         return this;
     }
 
-    public EditableNode translate(float x, float y, float z) {
+    public SketchNode translate(float x, float y, float z) {
         this.translation.add(x, y, z);
         invalidate();
         return this;
     }
 
-    public EditableNode translate(Vector3 translate) {
+    public SketchNode translate(Vector3 translate) {
         this.translation.add(translate);
         invalidate();
         return this;
     }
 
-    public EditableNode setPosition(float x, float y, float z) {
+    public SketchNode setPosition(float x, float y, float z) {
         this.translation.set(x, y, z);
         invalidate();
         return this;
@@ -612,7 +620,7 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return translation;
     }
 
-    public EditableNode setPosition(Vector3 pos) {
+    public SketchNode setPosition(Vector3 pos) {
         this.translation.set(pos);
         invalidate();
         return this;
@@ -635,7 +643,7 @@ public class EditableNode extends Node implements AABBTree.AABBObject {
         return scale;
     }
 
-    public EditableNode setScale(float scale) {
+    public SketchNode setScale(float scale) {
         this.scale.set(scale, scale, scale);
         invalidate();
         return this;

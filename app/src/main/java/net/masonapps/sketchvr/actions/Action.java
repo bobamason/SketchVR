@@ -1,6 +1,6 @@
 package net.masonapps.sketchvr.actions;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 /**
  * Created by Bob Mason on 2/1/2018.
@@ -8,9 +8,9 @@ import net.masonapps.sketchvr.modeling.EditableNode;
 
 public abstract class Action {
 
-    private final EditableNode node;
+    private final SketchNode node;
 
-    public Action(EditableNode node) {
+    public Action(SketchNode node) {
         this.node = node;
     }
 
@@ -18,7 +18,7 @@ public abstract class Action {
 
     public abstract void undoAction();
 
-    public EditableNode getNode() {
+    public SketchNode getNode() {
         return node;
     }
 }

@@ -15,7 +15,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.google.vr.sdk.controller.Controller;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.input.DaydreamButtonEvent;
@@ -32,7 +32,7 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
     private final ModelInstance modelInstance;
     private final Material material;
     @Nullable
-    private EditableNode previewNode = null;
+    private SketchNode previewNode = null;
     private float distance = 3f;
 
     public AddNodeInput(SketchProjectEntity modelingProject, OnNodeAddedListener listener) {
@@ -88,7 +88,7 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
         return isVisible() && previewNode != null;
     }
 
-    public void setPreviewNode(@Nullable EditableNode previewNode) {
+    public void setPreviewNode(@Nullable SketchNode previewNode) {
         this.previewNode = previewNode;
         modelInstance.nodes.clear();
         modelInstance.model.nodes.clear();
@@ -128,7 +128,7 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
             switch (event.action) {
                 case DaydreamButtonEvent.ACTION_DOWN:
                     if (previewNode != null) {
-                        final EditableNode copy = previewNode.copy();
+                        final SketchNode copy = previewNode.copy();
                         previewNode.getPosition().mul(project.getInverseTransform());
                         previewNode.getRotation().mul(new Quaternion(project.getRotation()).conjugate());
                         previewNode.invalidate();
@@ -151,6 +151,6 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
     }
 
     public interface OnNodeAddedListener {
-        void nodeAdded(EditableNode node);
+        void nodeAdded(SketchNode node);
     }
 }

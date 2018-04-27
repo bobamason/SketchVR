@@ -23,7 +23,7 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Pools;
 
 import net.masonapps.sketchvr.math.SnapUtil;
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 /**
  * Created by Bob Mason on 1/18/2018.
@@ -207,7 +207,7 @@ public class TranslateHandle3D extends DragHandle3D {
     }
 
     @Override
-    public void setTransformable(@Nullable EditableNode transformable) {
+    public void setTransformable(@Nullable SketchNode transformable) {
         super.setTransformable(transformable);
         if (transformable != null) {
             setPosition(transformable.getPosition());

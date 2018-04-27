@@ -1,6 +1,6 @@
 package net.masonapps.sketchvr.actions;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 /**
@@ -11,7 +11,7 @@ public class RemoveAction extends Action {
 
     private final SketchProjectEntity project;
 
-    public RemoveAction(EditableNode entity, SketchProjectEntity project) {
+    public RemoveAction(SketchNode entity, SketchProjectEntity project) {
         super(entity);
         this.project = project;
     }

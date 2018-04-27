@@ -49,7 +49,7 @@ import net.masonapps.sketchvr.environment.Grid;
 import net.masonapps.sketchvr.math.Animator;
 import net.masonapps.sketchvr.math.RotationUtil;
 import net.masonapps.sketchvr.math.Side;
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.modeling.transform.RotateWidget;
 import net.masonapps.sketchvr.modeling.transform.ScaleWidget;
@@ -122,10 +122,10 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 private InputMode currentInputMode = InputMode.VIEW;
     private State currentState = STATE_NONE;
     @Nullable
-    private EditableNode focusedNode = null;
+    private SketchNode focusedNode = null;
     @Nullable
-    private EditableNode selectedNode = null;
-    private List<EditableNode> multiSelectNodes = new ArrayList<>();
+    private SketchNode selectedNode = null;
+    private List<SketchNode> multiSelectNodes = new ArrayList<>();
     private SketchProjectEntity modelingProject;
     private Vector3 hitPoint = new Vector3();
     private AABBTree.IntersectionInfo intersectionInfo = new AABBTree.IntersectionInfo();
@@ -136,7 +136,7 @@ private InputMode currentInputMode = InputMode.VIEW;
     private Grid gridFloor;
     private Vector3 cameraPosition = new Vector3();
     @Nullable
-    private EditableNode nodeToAdd = null;
+    private SketchNode nodeToAdd = null;
     private InputProcessorChooser inputProcessorChooser;
     private AddNodeInput addNodeInput;
     private SingleNodeSelector singleNodeSelector;
@@ -146,7 +146,7 @@ private InputMode currentInputMode = InputMode.VIEW;
         this(game, projectName, new ArrayList<>());
     }
 
-    public MainScreen(SolidModelingGame game, String projectName, List<EditableNode> nodeList) {
+    public MainScreen(SolidModelingGame game, String projectName, List<SketchNode> nodeList) {
         super(game);
         final Skin skin = game.getSkin();
         this.projectName = projectName;
@@ -175,12 +175,12 @@ private InputMode currentInputMode = InputMode.VIEW;
             TransformAction.Transform oldTransform;
 
             @Override
-            public void onTransformStarted(@NonNull EditableNode entity) {
+            public void onTransformStarted(@NonNull SketchNode entity) {
                 oldTransform = entity.getTransform(new TransformAction.Transform());
             }
 
             @Override
-            public void onTransformFinished(@NonNull EditableNode entity) {
+            public void onTransformFinished(@NonNull SketchNode entity) {
                 undoRedoCache.save(new TransformAction(entity, oldTransform, entity.getTransform(new TransformAction.Transform())));
                 final AABBTree.Node leafNode = entity.getNode();
                 if (leafNode != null)
@@ -267,7 +267,7 @@ private InputMode currentInputMode = InputMode.VIEW;
             @Override
             public void onDuplicateClicked() {
                 if (selectedNode != null) {
-                    final EditableNode previewNode = selectedNode.copy();
+                    final SketchNode previewNode = selectedNode.copy();
                     previewNode.initMesh();
                     addNodeInput.setPreviewNode(previewNode);
                     addNodeInput.setVisible(true);
@@ -318,13 +318,13 @@ private InputMode currentInputMode = InputMode.VIEW;
                     final int n = selectedNode.getChildCount();
                     for (int i = 0; i < n; i++) {
                         final Node child = selectedNode.getChild(i);
-                        if (child instanceof EditableNode) {
-                            final EditableNode editableNode = (EditableNode) child;
-                            editableNode.translation.mul(selectedNode.localTransform);
-                            editableNode.rotation.mulLeft(selectedNode.rotation);
-                            editableNode.scale.scl(selectedNode.scale);
-                            editableNode.invalidate();
-                            modelingProject.add(editableNode);
+                        if (child instanceof SketchNode) {
+                            final SketchNode sketchNode = (SketchNode) child;
+                            sketchNode.translation.mul(selectedNode.localTransform);
+                            sketchNode.rotation.mulLeft(selectedNode.rotation);
+                            sketchNode.scale.scl(selectedNode.scale);
+                            sketchNode.invalidate();
+                            modelingProject.add(sketchNode);
                         }
                     }
                 }
@@ -372,8 +372,8 @@ private InputMode currentInputMode = InputMode.VIEW;
 
             @Override
             public void onDoneClicked() {
-                final EditableNode group = new EditableNode();
-                for (EditableNode node : multiSelectNodes) {
+                final SketchNode group = new SketchNode();
+                for (SketchNode node : multiSelectNodes) {
                     modelingProject.remove(node);
                     group.addChild(node);
                 }
@@ -399,7 +399,7 @@ private InputMode currentInputMode = InputMode.VIEW;
         getWorld().add(modelingProject);
         modelingProject.setScale(projectScale);
 
-        for (EditableNode node : nodeList) {
+        for (SketchNode node : nodeList) {
             modelingProject.add(node);
         }
 
@@ -442,13 +442,13 @@ private InputMode currentInputMode = InputMode.VIEW;
                 bounds.getWidth(), bounds.getHeight(), bounds.getDepth());
     }
 
-    private void addNode(EditableNode node) {
+    private void addNode(SketchNode node) {
         modelingProject.add(node);
         setSelectedNode(node);
         undoRedoCache.save(new AddAction(node, modelingProject));
     }
 
-    protected void drawEntityBounds(ShapeRenderer shapeRenderer, EditableNode entity, Color color) {
+    protected void drawEntityBounds(ShapeRenderer shapeRenderer, SketchNode entity, Color color) {
         shapeRenderer.setColor(color);
         shapeRenderer.setTransformMatrix(modelingProject.getTransform());
         final BoundingBox bounds = entity.getAABB();
@@ -579,11 +579,11 @@ private InputMode currentInputMode = InputMode.VIEW;
     }
 
     @Nullable
-    public EditableNode getSelectedNode() {
+    public SketchNode getSelectedNode() {
         return selectedNode;
     }
 
-    private void setSelectedNode(@Nullable EditableNode entity) {
+    private void setSelectedNode(@Nullable SketchNode entity) {
         selectedNode = entity;
         mainInterface.setEntity(selectedNode);
 

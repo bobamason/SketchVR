@@ -12,7 +12,7 @@ import com.badlogic.gdx.utils.NumberUtils;
 import com.badlogic.gdx.utils.ShortArray;
 
 import net.masonapps.sketchvr.Constants;
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,7 +29,7 @@ import java.util.Locale;
 
 public class PLYWriter {
 
-    public static void writeToFile(File file, List<EditableNode> nodes, Matrix4 transform) throws IOException {
+    public static void writeToFile(File file, List<SketchNode> nodes, Matrix4 transform) throws IOException {
         writeToOutputStream(new FileOutputStream(file), nodes, transform);
     }
 
@@ -37,14 +37,14 @@ public class PLYWriter {
         writeToOutputStream(new FileOutputStream(file), vertices, indices, vertexAttributes, transform);
     }
 
-    public static void writeToOutputStream(OutputStream outputStream, List<EditableNode> nodes, Matrix4 transform) throws IOException {
+    public static void writeToOutputStream(OutputStream outputStream, List<SketchNode> nodes, Matrix4 transform) throws IOException {
         if (nodes.isEmpty()) return;
         final FloatArray vertexArray = new FloatArray();
         final ShortArray indexArray = new ShortArray();
         final Vector3 pos = new Vector3();
         final Vector3 nor = new Vector3();
 
-        for (EditableNode node : nodes) {
+        for (SketchNode node : nodes) {
             final Mesh mesh = node.parts.get(0).meshPart.mesh;
             VertexAttributes vertexAttributes = mesh.getVertexAttributes();
 

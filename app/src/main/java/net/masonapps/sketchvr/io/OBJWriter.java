@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -30,7 +30,7 @@ import java.util.zip.ZipOutputStream;
 public class OBJWriter {
 
 
-    public static void writeToZip(File zipFile, List<EditableNode> nodes, Matrix4 transform) throws IOException {
+    public static void writeToZip(File zipFile, List<SketchNode> nodes, Matrix4 transform) throws IOException {
         final int index = zipFile.getName().lastIndexOf('.');
         final String name = zipFile.getName().substring(0, index > 0 ? index : zipFile.getName().length());
 
@@ -47,7 +47,7 @@ public class OBJWriter {
         zipOutputStream.write(mtlOutputStream.toByteArray());
     }
 
-    public static void writeToFiles(File objFile, File mtlFile, List<EditableNode> nodes, Matrix4 transform) throws IOException {
+    public static void writeToFiles(File objFile, File mtlFile, List<SketchNode> nodes, Matrix4 transform) throws IOException {
 
         final String name = mtlFile.getName();
         final int index = name.lastIndexOf('.');
@@ -57,7 +57,7 @@ public class OBJWriter {
     }
 
     @SuppressLint("DefaultLocale")
-    private static void writeObjToOutputStream(OutputStream outputStream, List<EditableNode> nodes, String mtlfilename, Matrix4 transform) throws IOException {
+    private static void writeObjToOutputStream(OutputStream outputStream, List<SketchNode> nodes, String mtlfilename, Matrix4 transform) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
         try {
             writer.write("mtllib ./" + mtlfilename);
@@ -71,7 +71,7 @@ public class OBJWriter {
         }
     }
 
-    private static void writeObject(BufferedWriter writer, EditableNode node, String groupName, String materialName, Matrix4 globalTransform) throws IOException {
+    private static void writeObject(BufferedWriter writer, SketchNode node, String groupName, String materialName, Matrix4 globalTransform) throws IOException {
         writer.write("g " + groupName);
         writer.newLine();
         writer.write("usemtl " + materialName);
@@ -130,7 +130,7 @@ public class OBJWriter {
         writer.newLine();
     }
 
-    private static void writeMtlToOutputStream(OutputStream outputStream, List<EditableNode> nodes) throws IOException {
+    private static void writeMtlToOutputStream(OutputStream outputStream, List<SketchNode> nodes) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
 
         try {
@@ -148,7 +148,7 @@ public class OBJWriter {
         return "mat" + index;
     }
 
-    private static void writeMaterial(BufferedWriter writer, EditableNode node, String materialName) throws IOException {
+    private static void writeMaterial(BufferedWriter writer, SketchNode node, String materialName) throws IOException {
         writer.write("newmtl " + materialName);
         writer.newLine();
         Color ambient = node.getAmbientColor();

@@ -18,7 +18,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
 import net.masonapps.sketchvr.mesh.MeshInfo;
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,23 +39,23 @@ import java.util.List;
 
 public class ProjectFileIO {
 
-    public static JSONArray toJSONArray(List<EditableNode> objects) throws JSONException {
+    public static JSONArray toJSONArray(List<SketchNode> objects) throws JSONException {
         final JSONArray jsonArray = new JSONArray();
-        for (EditableNode object : objects) {
+        for (SketchNode object : objects) {
             jsonArray.put(object.toJSONObject());
         }
         return jsonArray;
     }
 
-    public static List<EditableNode> fromJSONArray(JSONArray jsonArray) throws JSONException {
-        final ArrayList<EditableNode> objects = new ArrayList<>(jsonArray.length());
+    public static List<SketchNode> fromJSONArray(JSONArray jsonArray) throws JSONException {
+        final ArrayList<SketchNode> objects = new ArrayList<>(jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
-            objects.add(EditableNode.fromJSONObject(jsonArray.getJSONObject(i)));
+            objects.add(SketchNode.fromJSONObject(jsonArray.getJSONObject(i)));
         }
         return objects;
     }
 
-    public static void saveFile(File file, List<EditableNode> objects) throws IOException, JSONException {
+    public static void saveFile(File file, List<SketchNode> objects) throws IOException, JSONException {
         BufferedWriter writer = null;
         try {
             final JSONArray jsonArray = toJSONArray(objects);
@@ -67,9 +67,9 @@ public class ProjectFileIO {
         }
     }
 
-    public static List<EditableNode> loadFile(File file) throws IOException, JSONException {
+    public static List<SketchNode> loadFile(File file) throws IOException, JSONException {
         BufferedReader reader = null;
-        final ArrayList<EditableNode> objects = new ArrayList<>();
+        final ArrayList<SketchNode> objects = new ArrayList<>();
         try {
             reader = new BufferedReader(new FileReader(file));
             final StringBuilder sb = new StringBuilder();
@@ -99,15 +99,15 @@ public class ProjectFileIO {
 
         private static MeshInfo parseMesh(JSONObject jsonObject) throws JSONException {
             final MeshInfo mesh = new MeshInfo();
-            mesh.numVertices = jsonObject.getInt(EditableNode.KEY_VERTEX_COUNT);
-            mesh.numIndices = jsonObject.getInt(EditableNode.KEY_INDEX_COUNT);
+            mesh.numVertices = jsonObject.getInt(SketchNode.KEY_VERTEX_COUNT);
+            mesh.numIndices = jsonObject.getInt(SketchNode.KEY_INDEX_COUNT);
             mesh.vertexAttributes = new VertexAttributes(VertexAttribute.Position(), VertexAttribute.Normal(), VertexAttribute.TexCoords(0));
 
-            final String vertexString = jsonObject.getString(EditableNode.KEY_VERTICES);
+            final String vertexString = jsonObject.getString(SketchNode.KEY_VERTICES);
             mesh.vertices = new float[mesh.vertexAttributes.vertexSize / Float.BYTES * mesh.numVertices];
             Base64Utils.decodeFloatArray(vertexString, mesh.vertices);
 
-            final String indexString = jsonObject.getString(EditableNode.KEY_INDICES);
+            final String indexString = jsonObject.getString(SketchNode.KEY_INDICES);
             mesh.indices = new short[mesh.numIndices];
             Base64Utils.decodeShortArray(indexString, mesh.indices);
             return mesh;
@@ -145,21 +145,21 @@ public class ProjectFileIO {
         private void parseJSONArray(ModelData data, JSONArray jsonArray, @Nullable BoundingBox outBounds) throws JSONException {
             for (int i = 0; i < jsonArray.length(); i++) {
                 final JSONObject jsonObject = jsonArray.getJSONObject(i);
-                final String primitiveKey = jsonObject.optString(EditableNode.KEY_PRIMITIVE, EditableNode.KEY_GROUP);
-                if (primitiveKey.equals(EditableNode.KEY_GROUP)) {
-                    if (jsonObject.has(EditableNode.KEY_CHILDREN)) {
-                        final JSONArray children = jsonObject.optJSONArray(EditableNode.KEY_CHILDREN);
+                final String primitiveKey = jsonObject.optString(SketchNode.KEY_PRIMITIVE, SketchNode.KEY_GROUP);
+                if (primitiveKey.equals(SketchNode.KEY_GROUP)) {
+                    if (jsonObject.has(SketchNode.KEY_CHILDREN)) {
+                        final JSONArray children = jsonObject.optJSONArray(SketchNode.KEY_CHILDREN);
                         if (children != null)
                             parseJSONArray(data, children, outBounds);
                     }
-                } else if(primitiveKey.equals(EditableNode.KEY_MESH)){
+                } else if (primitiveKey.equals(SketchNode.KEY_MESH)) {
                     addModelNode(data, jsonObject, outBounds);
                 }
             }
         }
 
         private void addModelNode(ModelData data, JSONObject jsonObject, @Nullable BoundingBox outBounds) throws JSONException {
-            if (!jsonObject.has(EditableNode.KEY_MESH)) 
+            if (!jsonObject.has(SketchNode.KEY_MESH)) 
                 return;
             
             index++;
@@ -168,10 +168,10 @@ public class ProjectFileIO {
             final String meshId = "mesh" + index;
             node.id = nodeId;
             node.meshId = meshId;
-            node.translation = new Vector3().fromString(jsonObject.optString(EditableNode.KEY_POSITION, "(0.0,0.0,0.0)"));
-            final String rotationString = jsonObject.optString(EditableNode.KEY_ROTATION, "(0.0,0.0,0.0,1.0)");
+            node.translation = new Vector3().fromString(jsonObject.optString(SketchNode.KEY_POSITION, "(0.0,0.0,0.0)"));
+            final String rotationString = jsonObject.optString(SketchNode.KEY_ROTATION, "(0.0,0.0,0.0,1.0)");
             node.rotation = new Quaternion(JsonUtils.quaternionFromString(rotationString));
-            node.scale = new Vector3().fromString(jsonObject.optString(EditableNode.KEY_SCALE, "(1.0,1.0,1.0)"));
+            node.scale = new Vector3().fromString(jsonObject.optString(SketchNode.KEY_SCALE, "(1.0,1.0,1.0)"));
 
             ModelNodePart pm = new ModelNodePart();
             final String partId = "part" + index;
@@ -182,7 +182,7 @@ public class ProjectFileIO {
             data.nodes.add(node);
 
             final MeshInfo meshInfo;
-                    meshInfo = parseMesh(jsonObject.getJSONObject(EditableNode.KEY_MESH));
+            meshInfo = parseMesh(jsonObject.getJSONObject(SketchNode.KEY_MESH));
 
             final float[] vertices = new float[meshInfo.vertices.length];
             System.arraycopy(meshInfo.vertices, 0, vertices, 0, meshInfo.vertices.length);
@@ -218,10 +218,10 @@ public class ProjectFileIO {
 
             ModelMaterial mat = new ModelMaterial();
             mat.id = materialName;
-            mat.ambient = Color.valueOf(jsonObject.optString(EditableNode.KEY_AMBIENT, "000000FF"));
-            mat.diffuse = Color.valueOf(jsonObject.optString(EditableNode.KEY_DIFFUSE, "7F7F7FFF"));
-            mat.specular = Color.valueOf(jsonObject.optString(EditableNode.KEY_SPECULAR, "000000FF"));
-            mat.shininess = (float) jsonObject.optDouble(EditableNode.KEY_SHININESS, 8.);
+            mat.ambient = Color.valueOf(jsonObject.optString(SketchNode.KEY_AMBIENT, "000000FF"));
+            mat.diffuse = Color.valueOf(jsonObject.optString(SketchNode.KEY_DIFFUSE, "7F7F7FFF"));
+            mat.specular = Color.valueOf(jsonObject.optString(SketchNode.KEY_SPECULAR, "000000FF"));
+            mat.shininess = (float) jsonObject.optDouble(SketchNode.KEY_SHININESS, 8.);
             mat.opacity = 1f;
             data.materials.add(mat);
         }

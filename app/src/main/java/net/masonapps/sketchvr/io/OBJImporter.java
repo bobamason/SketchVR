@@ -1,6 +1,6 @@
 package net.masonapps.sketchvr.io;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,8 +15,8 @@ import java.util.List;
 
 public class OBJImporter {
 
-    public static List<EditableNode> loadFile(File file) throws IOException {
-        final ArrayList<EditableNode> nodes = new ArrayList<>();
+    public static List<SketchNode> loadFile(File file) throws IOException {
+        final ArrayList<SketchNode> nodes = new ArrayList<>();
         final String fileName = FileUtils.nameWithoutExtension(file);
         final File mtlFile = new File(file.getParentFile(), fileName + ".mtl");
         BufferedReader reader = null;

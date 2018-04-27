@@ -2,7 +2,7 @@ package net.masonapps.sketchvr.modeling.ui;
 
 import android.support.annotation.Nullable;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 /**
@@ -13,7 +13,7 @@ public class SingleNodeSelector extends ModelingInputProcessor {
 
     private final OnNodeSelectedListener listener;
     @Nullable
-    private EditableNode selectedNode = null;
+    private SketchNode selectedNode = null;
 
     public SingleNodeSelector(SketchProjectEntity modelingProject, OnNodeSelectedListener listener) {
         super(modelingProject);
@@ -22,8 +22,8 @@ public class SingleNodeSelector extends ModelingInputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (isCursorOver() && intersectionInfo.object instanceof EditableNode) {
-            selectedNode = (EditableNode) intersectionInfo.object;
+        if (isCursorOver() && intersectionInfo.object instanceof SketchNode) {
+            selectedNode = (SketchNode) intersectionInfo.object;
             listener.nodeSelected(selectedNode);
             return true;
         }
@@ -46,6 +46,6 @@ public class SingleNodeSelector extends ModelingInputProcessor {
     }
 
     public interface OnNodeSelectedListener {
-        void nodeSelected(EditableNode node);
+        void nodeSelected(SketchNode node);
     }
 }

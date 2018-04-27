@@ -4,7 +4,7 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Pool;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 /**
  * Created by Bob Mason on 2/1/2018.
@@ -15,7 +15,7 @@ public class TransformAction extends Action {
     private final Transform oldTransform;
     private final Transform newTransform;
 
-    public TransformAction(EditableNode node, Transform oldTransform, Transform newTransform) {
+    public TransformAction(SketchNode node, Transform oldTransform, Transform newTransform) {
         super(node);
         this.oldTransform = oldTransform;
         this.newTransform = newTransform;

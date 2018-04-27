@@ -32,7 +32,7 @@ import com.google.vr.sdk.audio.GvrAudioEngine;
 import com.google.vr.sdk.controller.Controller;
 
 import net.masonapps.sketchvr.io.ProjectFileIO;
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.screens.LoadingScreen;
 import net.masonapps.sketchvr.screens.MainScreen;
@@ -250,10 +250,10 @@ public class SolidModelingGame extends VrGame {
         Log.d(Constants.APP_NAME, "saving project " + projectName + "...");
         Activity activity = GdxVr.app.getActivityWeakReference().get();
         if (activity != null) {
-            final ArrayList<EditableNode> list = new ArrayList<>();
+            final ArrayList<SketchNode> list = new ArrayList<>();
             for (Node node : modelingProject.modelInstance.nodes) {
-                if (node instanceof EditableNode)
-                    list.add((EditableNode) node);
+                if (node instanceof SketchNode)
+                    list.add((SketchNode) node);
             }
             ((SolidModelingApplication) activity.getApplication()).setModelingProject(list, new Matrix4());
             final File file = new File(activity.getFilesDir(), projectName + "." + Constants.FILE_TYPE_PROJECT);
@@ -277,10 +277,10 @@ public class SolidModelingGame extends VrGame {
                 }
             });
         } else {
-            final ArrayList<EditableNode> list = new ArrayList<>();
+            final ArrayList<SketchNode> list = new ArrayList<>();
             for (Node node : modelingProject.modelInstance.nodes) {
-                if (node instanceof EditableNode)
-                    list.add((EditableNode) node);
+                if (node instanceof SketchNode)
+                    list.add((SketchNode) node);
             }
             ((SolidModelingApplication) activity.getApplication()).setModelingProject(list, transform);
             final File dir = new File(Environment.getExternalStorageDirectory(), Constants.EXTERNAL_DIRECTORY);

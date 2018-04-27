@@ -2,7 +2,7 @@ package net.masonapps.sketchvr.actions;
 
 import com.badlogic.gdx.graphics.Color;
 
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 
 import java.util.function.Consumer;
 
@@ -16,7 +16,7 @@ public class ColorAction extends Action {
     private final Color newColor;
     private final Consumer<Color> consumer;
 
-    public ColorAction(EditableNode node, Color oldColor, Color newColor, Consumer<Color> consumer) {
+    public ColorAction(SketchNode node, Color oldColor, Color newColor, Consumer<Color> consumer) {
         super(node);
         this.oldColor = oldColor;
         this.newColor = newColor;

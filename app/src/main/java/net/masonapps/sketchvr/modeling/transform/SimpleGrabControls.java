@@ -11,7 +11,7 @@ import com.badlogic.gdx.math.collision.Ray;
 import net.masonapps.sketchvr.actions.TransformAction;
 import net.masonapps.sketchvr.math.RotationUtil;
 import net.masonapps.sketchvr.math.SnapUtil;
-import net.masonapps.sketchvr.modeling.EditableNode;
+import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.GdxVr;
@@ -24,7 +24,7 @@ import org.masonapps.libgdxgooglevr.vr.ArmModel;
 public class SimpleGrabControls {
 
     @Nullable
-    private EditableNode node = null;
+    private SketchNode node = null;
     private Ray ray = new Ray();
     private Plane plane = new Plane();
     private TransformAction.Transform startTransform = new TransformAction.Transform();
@@ -38,7 +38,7 @@ public class SimpleGrabControls {
     @Nullable
     private TransformWidget3D.OnTransformActionListener listener = null;
 
-    public void begin(EditableNode node, Vector3 hitPoint, SketchProjectEntity modelingProject2) {
+    public void begin(SketchNode node, Vector3 hitPoint, SketchProjectEntity modelingProject2) {
         this.node = node;
         if (listener != null)
             listener.onTransformStarted(node);
