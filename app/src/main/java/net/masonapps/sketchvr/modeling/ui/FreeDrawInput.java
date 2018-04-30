@@ -6,6 +6,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 
 import net.masonapps.sketchvr.mesh.Stroke;
+import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
+import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import java.util.List;
@@ -16,20 +18,22 @@ import java.util.List;
 
 public class FreeDrawInput extends ModelingInputProcessor {
 
+    private final SketchMeshBuilder builder;
     private float drawDistance = 3f;
     private Stroke stroke = new Stroke();
     private Vector3 tmpPoint = new Vector3();
     private boolean isDrawing = false;
 
-    public FreeDrawInput(SketchProjectEntity project) {
+    public FreeDrawInput(SketchProjectEntity project, SketchMeshBuilder builder) {
         super(project);
+        this.builder = builder;
     }
 
     @Override
     public boolean performRayTest(Ray ray) {
         intersectionInfo.hitPoint.set(ray.direction).scl(drawDistance).add(ray.origin);
         if (isDrawing) {
-            stroke.addPoint(tmpPoint.set(intersectionInfo.hitPoint));
+            stroke.addPoint(tmpPoint.set(intersectionInfo.hitPoint).mul(project.getInverseTransform()));
         }
         return true;
     }
@@ -54,7 +58,16 @@ public class FreeDrawInput extends ModelingInputProcessor {
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         isDrawing = false;
         stroke.simplifyByPerpendicularDistance(0.025f);
-        // TODO: 4/27/2018 add mesh 
+        builder.begin();
+        final int pointCount = stroke.getPointCount();
+        for (int i = 1; i < pointCount; i++) {
+            final Vector3 p1 = stroke.points.get(i - 1);
+            final Vector3 p2 = stroke.points.get(i);
+            final Vector3 p3 = new Vector3();
+            // TODO: 4/30/2018 remove test 
+            p3.set(p2).sub(p1).scl(0.5f).add(p1).add(0, 0.2f, 0);
+        }
+        project.add(new SketchNode(builder.end()));
         return true;
     }
 

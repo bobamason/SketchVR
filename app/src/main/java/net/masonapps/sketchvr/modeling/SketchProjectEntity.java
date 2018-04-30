@@ -3,6 +3,7 @@ package net.masonapps.sketchvr.modeling;
 import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.Node;
@@ -23,21 +24,20 @@ import java.util.List;
 public class SketchProjectEntity extends Entity {
 
     private final AABBTree aabbTree;
-    private final SketchMeshBuilder builder;
 
-    public SketchProjectEntity() {
-        this(null);
+    public SketchProjectEntity(Mesh mesh) {
+        this(mesh, null);
     }
 
-    public SketchProjectEntity(@Nullable List<SketchNode> nodes) {
+    @SuppressWarnings("ConstantConditions")
+    public SketchProjectEntity(Mesh mesh, @Nullable List<SketchNode> nodes) {
         super(new ModelInstance(new Model()));
+        modelInstance.model.meshes.add(mesh);
         aabbTree = new AABBTree();
         if (nodes != null && !nodes.isEmpty()) {
             for (SketchNode node : nodes)
                 add(node);
         }
-        builder = new SketchMeshBuilder();
-        modelInstance.model.meshes.add(builder.getMesh());
     }
 
 
@@ -91,7 +91,6 @@ public class SketchProjectEntity extends Entity {
         return true;
     }
 
-    @Nullable
     public boolean rayTest(Ray ray, AABBTree.IntersectionInfo intersection) {
         final Ray tmpRay = Pools.obtain(Ray.class);
         final Matrix4 tmpMat = Pools.obtain(Matrix4.class);

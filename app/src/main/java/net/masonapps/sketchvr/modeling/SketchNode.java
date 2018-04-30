@@ -71,8 +71,12 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     }
 
     public SketchNode(@NonNull MeshPart meshPart) {
+        this(meshPart, null);
+    }
+
+    public SketchNode(@NonNull MeshPart meshPart, @Nullable Material material) {
         super();
-        parts.add(new NodePart(meshPart, createDefaultMaterial()));
+        parts.add(new NodePart(meshPart, material == null ? createDefaultMaterial() : material));
         updateBounds();
         invalidate();
         isGroup = false;

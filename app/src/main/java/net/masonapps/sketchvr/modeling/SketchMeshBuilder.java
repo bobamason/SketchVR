@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ShortArray;
@@ -19,7 +20,7 @@ import com.badlogic.gdx.utils.ShortArray;
 /**
  * Created by Bob Mason on 4/27/2018. Modified Version of {@link com.badlogic.gdx.graphics.g3d.utils.MeshBuilder} written by Xoppa
  */
-public class SketchMeshBuilder {
+public class SketchMeshBuilder implements Disposable {
     private final static Vector3 vTmp = new Vector3();
     private final static Vector3 normal = new Vector3();
     private final MeshPartBuilder.VertexInfo vertTmp1 = new MeshPartBuilder.VertexInfo();
@@ -225,10 +226,6 @@ public class SketchMeshBuilder {
 
     public VertexAttributes getAttributes() {
         return attributes;
-    }
-
-    public MeshPart getMeshPart() {
-        return part;
     }
 
     public int getPrimitiveType() {
@@ -470,5 +467,12 @@ public class SketchMeshBuilder {
 
     public Mesh getMesh() {
         return mesh;
+    }
+
+    @Override
+    public void dispose() {
+        vertices.clear();
+        indices.clear();
+        mesh.dispose();
     }
 }

@@ -49,6 +49,7 @@ import net.masonapps.sketchvr.environment.Grid;
 import net.masonapps.sketchvr.math.Animator;
 import net.masonapps.sketchvr.math.RotationUtil;
 import net.masonapps.sketchvr.math.Side;
+import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.modeling.transform.RotateWidget;
@@ -58,8 +59,10 @@ import net.masonapps.sketchvr.modeling.transform.TransformWidget3D;
 import net.masonapps.sketchvr.modeling.transform.TranslateWidget;
 import net.masonapps.sketchvr.modeling.ui.AddNodeInput;
 import net.masonapps.sketchvr.modeling.ui.EditModeTable;
+import net.masonapps.sketchvr.modeling.ui.FreeDrawInput;
 import net.masonapps.sketchvr.modeling.ui.InputProcessorChooser;
 import net.masonapps.sketchvr.modeling.ui.MainInterface;
+import net.masonapps.sketchvr.modeling.ui.ModelingInputProcessor;
 import net.masonapps.sketchvr.modeling.ui.MultiNodeSelector;
 import net.masonapps.sketchvr.modeling.ui.PlanarPointsInput;
 import net.masonapps.sketchvr.modeling.ui.SingleNodeSelector;
@@ -105,8 +108,8 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private final GroupCompleteDialog groupDialog;
     private final Entity gradientBackground;
     private final ExportDialog exportDialog;
-    // TODO: 3/23/2018 rename 
     private final PlanarPointsInput pointInput;
+    private final FreeDrawInput freeDrawInput;
     private TransformWidget3D transformUI;
     private boolean isTouchPadClicked = false;
     private Quaternion rotation = new Quaternion();
@@ -118,8 +121,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private Vector3 center = new Vector3();
     private float projectScale = 1f;
     private String projectName;
-//    private ViewAction viewAction = ACTION_NONE;
-private InputMode currentInputMode = InputMode.VIEW;
+    private final SketchMeshBuilder sketchMeshBuilder;
     private State currentState = STATE_NONE;
     @Nullable
     private SketchNode focusedNode = null;
@@ -141,6 +143,8 @@ private InputMode currentInputMode = InputMode.VIEW;
     private AddNodeInput addNodeInput;
     private SingleNodeSelector singleNodeSelector;
     private MultiNodeSelector multiNodeSelector;
+    //    private ViewAction viewAction = ACTION_NONE;
+    private InputMode currentInputMode = InputMode.VIEW;
 
     public MainScreen(SolidModelingGame game, String projectName) {
         this(game, projectName, new ArrayList<>());
@@ -156,7 +160,9 @@ private InputMode currentInputMode = InputMode.VIEW;
         gridFloor = new Grid(2, skin.getRegion(Style.Drawables.grid), Color.LIGHT_GRAY);
 
         setBackgroundColor(Color.SKY);
-        modelingProject = new SketchProjectEntity();
+        sketchMeshBuilder = new SketchMeshBuilder();
+        manageDisposable(sketchMeshBuilder);
+        modelingProject = new SketchProjectEntity(sketchMeshBuilder.getMesh());
         undoRedoCache = new UndoRedoCache();
 
         final ModelBuilder modelBuilder = new ModelBuilder();
@@ -268,7 +274,6 @@ private InputMode currentInputMode = InputMode.VIEW;
             public void onDuplicateClicked() {
                 if (selectedNode != null) {
                     final SketchNode previewNode = selectedNode.copy();
-                    previewNode.initMesh();
                     addNodeInput.setPreviewNode(previewNode);
                     addNodeInput.setVisible(true);
                     inputProcessorChooser.setActiveProcessor(addNodeInput);
@@ -387,7 +392,7 @@ private InputMode currentInputMode = InputMode.VIEW;
 
         exportDialog.setVisible(false);
         mainInterface.addProcessor(exportDialog);
-        
+
         inputProcessorChooser = new InputProcessorChooser();
         mainInterface.addProcessor(inputProcessorChooser);
 
@@ -404,10 +409,11 @@ private InputMode currentInputMode = InputMode.VIEW;
         }
 
         // TODO: 3/23/2018 remove test 
+        freeDrawInput = new FreeDrawInput(modelingProject, sketchMeshBuilder);
         pointInput = new PlanarPointsInput(modelingProject, point -> Logger.d("point added " + point));
         pointInput.getPlane().set(Vector3.Zero, Vector3.Z);
         singleNodeSelector = new SingleNodeSelector(modelingProject, this::setSelectedNode);
-        inputProcessorChooser.setActiveProcessor(pointInput);
+        inputProcessorChooser.setActiveProcessor(freeDrawInput);
     }
 
     private static Model createGrid(ModelBuilder builder, Skin skin, float radius) {
@@ -559,10 +565,10 @@ private InputMode currentInputMode = InputMode.VIEW;
     }
 
     private void updateInterfacePosition() {
-            gradientBackground.setPosition(getVrCamera().position);
-            mainInterface.setTransformable(true);
-            mainInterface.setPosition(getVrCamera().position);
-            mainInterface.lookAt(tmp.set(getVrCamera().direction).scl(-1).add(getVrCamera().position), getVrCamera().up);
+        gradientBackground.setPosition(getVrCamera().position);
+        mainInterface.setTransformable(true);
+        mainInterface.setPosition(getVrCamera().position);
+        mainInterface.lookAt(tmp.set(getVrCamera().direction).scl(-1).add(getVrCamera().position), getVrCamera().up);
     }
 
     @Override
@@ -623,18 +629,9 @@ private InputMode currentInputMode = InputMode.VIEW;
         shapeRenderer.setTransformMatrix(modelingProject.getTransform());
 //        AABBTree.debugAABBTree(shapeRenderer, project.getAABBTree(), Color.YELLOW);
         transformUI.drawShapes(shapeRenderer);
-        if (focusedNode != null) {
-            drawEntityBounds(shapeRenderer, focusedNode, Color.BLACK);
-        }
-        if (selectedNode != null) {
-            drawEntityBounds(shapeRenderer, selectedNode, Color.WHITE);
-//            debugBVH(shapeRenderer, project, Color.YELLOW);
-        }
-        if (inputProcessorChooser.getActiveProcessor() instanceof MultiNodeSelector)
-            drawSelectionBox(shapeRenderer, Color.WHITE);
 
-        // TODO: 3/23/2018 improve draw 
-//        pointInput.draw(shapeRenderer);
+        if (inputProcessorChooser.getActiveProcessor() instanceof ModelingInputProcessor)
+            ((ModelingInputProcessor) inputProcessorChooser.getActiveProcessor()).draw(shapeRenderer);
 
         shapeRenderer.end();
 
@@ -665,6 +662,10 @@ private InputMode currentInputMode = InputMode.VIEW;
             if (activeProcessor instanceof AddNodeInput) {
                 ((AddNodeInput) activeProcessor).setPreviewNode(null);
             }
+            //todo end part on backpress
+//            if (activeProcessor instanceof OnBackClickedListener) {
+//                ((OnBackClickedListener) activeProcessor).onBackClicked();
+//            }
             if (!(activeProcessor instanceof SingleNodeSelector)) {
                 inputProcessorChooser.setActiveProcessor(singleNodeSelector);
             } else {
@@ -824,6 +825,10 @@ private InputMode currentInputMode = InputMode.VIEW;
 
     public SketchProjectEntity getModelingProject() {
         return modelingProject;
+    }
+
+    public SketchMeshBuilder getSketchMeshBuilder() {
+        return sketchMeshBuilder;
     }
 
     // TODO: 3/28/2018 remove 
