@@ -43,7 +43,6 @@ public class SketchProjectEntity extends Entity {
 
     public void add(SketchNode node) {
         if (modelInstance == null) return;
-        node.initMesh();
 
         modelInstance.nodes.add(node);
         modelInstance.model.nodes.add(node);

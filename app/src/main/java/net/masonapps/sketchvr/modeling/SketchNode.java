@@ -4,7 +4,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
@@ -56,7 +55,6 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     protected final Matrix4 inverseTransform = new Matrix4();
     private final Ray transformedRay = new Ray();
     private final boolean isGroup;
-    private final MeshInfo meshInfo;
     protected BoundingBox bounds = new BoundingBox();
     private boolean updated = false;
     @Nullable
@@ -69,19 +67,21 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
 
     public SketchNode() {
         super();
-        meshInfo = null;
         isGroup = true;
     }
 
-    public SketchNode(@NonNull MeshInfo meshInfo) {
+    public SketchNode(@NonNull MeshPart meshPart) {
         super();
-        this.meshInfo = meshInfo;
+        parts.add(new NodePart(meshPart, createDefaultMaterial()));
+        updateBounds();
+        invalidate();
         isGroup = false;
     }
 
     public static SketchNode fromJSONObject(JSONObject jsonObject) throws JSONException {
+        // TODO: 4/30/2018 fix load mesh 
         final String primitiveKey = jsonObject.optString(KEY_PRIMITIVE, KEY_GROUP);
-        final SketchNode sketchNode;
+        SketchNode sketchNode = null;
 
         if (primitiveKey.equals(KEY_GROUP)) {
             sketchNode = new SketchNode();
@@ -93,7 +93,8 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
             }
         } else if (primitiveKey.equals(KEY_MESH) && jsonObject.has(KEY_MESH)) {
             final MeshInfo meshInfo = parseMesh(jsonObject.getJSONObject(KEY_MESH));
-            sketchNode = new SketchNode(meshInfo);
+            // TODO: 4/30/2018  
+//            sketchNode = new SketchNode(part);
         } else {
             return null;
         }
@@ -138,21 +139,6 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
                 ColorAttribute.createDiffuse(diffuseColor),
                 ColorAttribute.createSpecular(specularColor),
                 FloatAttribute.createShininess(shininess));
-    }
-
-    public void initMesh() {
-        // TODO: 4/27/2018 fix 
-        if (parts.size > 0 || meshInfo == null) return;
-        final Mesh mesh = meshInfo.createMesh();
-        final MeshPart meshPart = new MeshPart();
-        meshPart.id = "part";
-        meshPart.primitiveType = GL20.GL_TRIANGLES;
-        meshPart.mesh = mesh;
-        meshPart.offset = 0;
-        meshPart.size = mesh.getNumIndices();
-        parts.add(new NodePart(meshPart, createDefaultMaterial()));
-        updateBounds();
-        invalidate();
     }
 
     public void updateBounds() {
@@ -241,8 +227,8 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         final SketchNode node;
         if (isGroup)
             node = new SketchNode();
-        else if (meshInfo != null)
-            node = new SketchNode(meshInfo);
+        else if (parts.size > 0)
+            node = new SketchNode(parts.get(0).meshPart);
         else
             return null;
         node.translation.set(translation);
@@ -337,7 +323,7 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
             }
             jsonObject.put(KEY_CHILDREN, jsonArray);
         } else {
-            jsonObject.put(KEY_MESH, meshToJsonObject(parts.get(0).meshPart.mesh));
+            jsonObject.put(KEY_MESH, meshPartToJsonObject(parts.get(0).meshPart));
         }
         jsonObject.put(KEY_AMBIENT, getAmbientColor().toString());
         jsonObject.put(KEY_DIFFUSE, getDiffuseColor().toString());
@@ -347,6 +333,11 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         jsonObject.put(KEY_ROTATION, JsonUtils.quaternionToString(rotation));
         jsonObject.put(KEY_SCALE, scale.toString());
         return jsonObject;
+    }
+
+    private JSONObject meshPartToJsonObject(MeshPart meshPart) {
+        // TODO: 4/30/2018 implement 
+        return new JSONObject();
     }
 
     private JSONObject meshToJsonObject(Mesh mesh) throws JSONException {
@@ -361,6 +352,7 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         jsonObject.put(KEY_INDEX_COUNT, numIndices);
         jsonObject.put(KEY_VERTICES, Base64Utils.encode(vertices));
         jsonObject.put(KEY_INDICES, Base64Utils.encode(indices));
+        // TODO: 4/30/2018 move to SketchMeshBuilder
         return jsonObject;
     }
 
