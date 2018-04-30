@@ -1,5 +1,7 @@
 package net.masonapps.sketchvr.modeling.ui;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
@@ -47,6 +49,11 @@ public class MultiNodeSelector extends ModelingInputProcessor {
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
         return !selectedNodes.isEmpty();
+    }
+
+    @Override
+    public void draw(ShapeRenderer shapeRenderer) {
+
     }
 
     public interface OnSelectionChangedListener {

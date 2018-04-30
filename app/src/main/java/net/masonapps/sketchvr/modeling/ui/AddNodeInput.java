@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -66,6 +67,11 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
             }
         }
         return rayTest;
+    }
+
+    @Override
+    public void draw(ShapeRenderer shapeRenderer) {
+        
     }
 
     @Override

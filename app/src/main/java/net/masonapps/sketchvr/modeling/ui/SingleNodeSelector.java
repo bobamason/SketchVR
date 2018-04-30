@@ -2,6 +2,8 @@ package net.masonapps.sketchvr.modeling.ui;
 
 import android.support.annotation.Nullable;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
@@ -43,6 +45,11 @@ public class SingleNodeSelector extends ModelingInputProcessor {
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
         return selectedNode != null;
+    }
+
+    @Override
+    public void draw(ShapeRenderer shapeRenderer) {
+
     }
 
     public interface OnNodeSelectedListener {
