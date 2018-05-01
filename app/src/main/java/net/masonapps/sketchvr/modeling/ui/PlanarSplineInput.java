@@ -4,35 +4,36 @@ import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.BSpline;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.FloatArray;
 
+import net.masonapps.sketchvr.math.PathUtils;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
-
-import org.masonapps.libgdxgooglevr.math.PlaneUtils;
 
 /**
  * Created by Bob Mason on 3/22/2018.
  */
 
-public class PlanarPointsInput extends ModelingInputProcessor {
+public class PlanarSplineInput extends ModelingInputProcessor {
 
+    public static final int SPLINE_DEGREE = 2;
     private final Plane plane = new Plane();
     private final Array<Vector3> points = new Array<>();
-    private final Vector2 hitPoint2D = new Vector2();
-    private final FloatArray vertices = new FloatArray();
+    //    private final Vector2 hitPoint2D = new Vector2();
     private final Vector3 point = new Vector3();
     private final Vector3 hitPoint3D = new Vector3();
     private final OnPointAddedListener listener;
     protected boolean isCursorOver = false;
     private Ray transformedRay = new Ray();
+    // TODO: 3/23/2018 remove spline test 
+    private BSpline<Vector3> spline = new BSpline<>();
 
-    public PlanarPointsInput(SketchProjectEntity project, OnPointAddedListener listener) {
+    public PlanarSplineInput(SketchProjectEntity project, OnPointAddedListener listener) {
         super(project);
         this.listener = listener;
     }
@@ -77,7 +78,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     @Override
     public void draw(ShapeRenderer shapeRenderer) {
         if (points.size == 0) return;
-        shapeRenderer.setColor(Color.GREEN);
+        shapeRenderer.setColor(Color.WHITE);
         for (int i = 0; i < points.size; i++) {
             if (i == points.size - 1) {
                 if (isCursorOver)
@@ -86,7 +87,16 @@ public class PlanarPointsInput extends ModelingInputProcessor {
                 shapeRenderer.line(points.get(i), points.get(i + 1));
             }
         }
-        shapeRenderer.setColor(Color.WHITE);
+        shapeRenderer.setColor(Color.GREEN);
+
+        if (points.size > SPLINE_DEGREE) {
+//        ElapsedTimer.getInstance().start("draw spline");
+//        final int segments = Math.max(points.size, MathUtils.ceil(spline.approxLength(2)) * 10);
+            final int segments = points.size * 4;
+//        Logger.d("points.size = " + points.size + " segments = " + segments);
+            PathUtils.drawPath(shapeRenderer, spline, segments);
+//        ElapsedTimer.getInstance().print("draw spline");
+        }
 
         final float r = 0.05f;
         final float d = 2f * r;
@@ -102,9 +112,8 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             final Vector3 cpy = point.cpy();
             points.add(cpy);
             listener.pointAdded(cpy);
-            PlaneUtils.toSubSpace(plane, cpy, hitPoint2D);
-            vertices.add(hitPoint2D.x);
-            vertices.add(hitPoint2D.y);
+            if (points.size > SPLINE_DEGREE)
+                spline.set(points.toArray(Vector3.class), SPLINE_DEGREE, false);
         }
         return isCursorOver;
     }

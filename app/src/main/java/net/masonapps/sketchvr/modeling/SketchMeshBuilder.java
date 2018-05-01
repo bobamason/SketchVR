@@ -7,8 +7,10 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
+import com.badlogic.gdx.math.EarClippingTriangulator;
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -17,11 +19,14 @@ import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ShortArray;
 
+import org.masonapps.libgdxgooglevr.math.PlaneUtils;
+
 /**
  * Created by Bob Mason on 4/27/2018. Modified Version of {@link com.badlogic.gdx.graphics.g3d.utils.MeshBuilder} written by Xoppa
  */
 public class SketchMeshBuilder implements Disposable {
     private final static Vector3 vTmp = new Vector3();
+    private final static Vector2 v2Tmp = new Vector2();
     private final static Vector3 normal = new Vector3();
     private final MeshPartBuilder.VertexInfo vertTmp1 = new MeshPartBuilder.VertexInfo();
     private final MeshPartBuilder.VertexInfo vertTmp2 = new MeshPartBuilder.VertexInfo();
@@ -73,6 +78,7 @@ public class SketchMeshBuilder implements Disposable {
     private int primitiveType;
     private float[] vertex;
     private short lastIndex;
+    private EarClippingTriangulator triangulator = new EarClippingTriangulator();
 
     public SketchMeshBuilder() {
         mesh = new Mesh(false, Short.MAX_VALUE, Short.MAX_VALUE * 3, VertexAttribute.Position(), VertexAttribute.Normal());
@@ -134,7 +140,10 @@ public class SketchMeshBuilder implements Disposable {
             throw new RuntimeException("end() must be called before beginning a new MeshPart");
         part = meshPart;
         part.id = id;
+        part.mesh = mesh;
         part.primitiveType = primitiveType;
+        istart = indices.size;
+        updateMeshPartIndexRange();
     }
 
     public MeshPart end() {
@@ -148,13 +157,20 @@ public class SketchMeshBuilder implements Disposable {
         bounds.inf();
         outPart.offset = istart;
         outPart.size = indices.size - istart;
-        istart = indices.size;
-        part = null;
 
         mesh.setVertices(vertices.items, 0, vertices.size);
         mesh.setIndices(indices.items, 0, indices.size);
 
+        part = null;
+
         return outPart;
+    }
+
+    private void updateMeshPartIndexRange() {
+        if (part != null) {
+            part.offset = istart;
+            part.size = indices.size - istart;
+        }
     }
 
     /**
@@ -332,12 +348,14 @@ public class SketchMeshBuilder implements Disposable {
 
     private void index(final short value) {
         indices.add(value);
+        updateMeshPartIndexRange();
     }
 
     private void index(final short value1, final short value2) {
         ensureIndices(2);
         indices.add(value1);
         indices.add(value2);
+        updateMeshPartIndexRange();
     }
 
     private void index(final short value1, final short value2, final short value3) {
@@ -345,6 +363,7 @@ public class SketchMeshBuilder implements Disposable {
         indices.add(value1);
         indices.add(value2);
         indices.add(value3);
+        updateMeshPartIndexRange();
     }
 
     private void index(final short value1, final short value2, final short value3, final short value4) {
@@ -353,6 +372,7 @@ public class SketchMeshBuilder implements Disposable {
         indices.add(value2);
         indices.add(value3);
         indices.add(value4);
+        updateMeshPartIndexRange();
     }
 
     private void index(short value1, short value2, short value3, short value4, short value5, short value6) {
@@ -363,6 +383,7 @@ public class SketchMeshBuilder implements Disposable {
         indices.add(value4);
         indices.add(value5);
         indices.add(value6);
+        updateMeshPartIndexRange();
     }
 
     private void index(short value1, short value2, short value3, short value4, short value5, short value6, short value7,
@@ -376,6 +397,7 @@ public class SketchMeshBuilder implements Disposable {
         indices.add(value6);
         indices.add(value7);
         indices.add(value8);
+        updateMeshPartIndexRange();
     }
 
     private void triangle(short index1, short index2, short index3) {
@@ -463,6 +485,17 @@ public class SketchMeshBuilder implements Disposable {
                            float x01, float y01, float z01) {
         rect(x00, y00, z00, x10, y10, z10, x11, y11, z11, x01, y01, z01);
         rect(x01, y01, z01, x11, y11, z11, x10, y10, z10, x00, y00, z00);
+    }
+
+    public void polygon(FloatArray vertices, Plane plane) {
+        if (vertices.size < 6) return;
+        final ShortArray triIndices = triangulator.computeTriangles(vertices);
+        for (int i = 0; i < triIndices.size; i++) {
+            final int iv = triIndices.get(i) * 2;
+            v2Tmp.set(vertices.get(iv), vertices.get(iv + 1));
+            PlaneUtils.toSpace(plane, v2Tmp, vTmp);
+            index(vertex(vertTmp1.set(null, null, null, null).setPos(vTmp).setNor(plane.normal).setUV(0f, 1f)));
+        }
     }
 
     public Mesh getMesh() {

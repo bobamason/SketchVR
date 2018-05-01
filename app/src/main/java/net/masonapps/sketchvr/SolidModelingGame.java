@@ -127,9 +127,18 @@ public class SolidModelingGame extends VrGame {
             progressLoadingScreen = new ProgressLoadingScreen(this, getSkin());
             isAtlasLoaded = true;
 
-            setScreen(progressLoadingScreen);
-            setLoadingScreenMessage("initializing shapes");
-            }
+            setScreen(new StartupScreen(this, new StartupScreen.StartupScreenListener() {
+                @Override
+                public void onCreateNewProjectClicked() {
+                    createNewProject();
+                }
+
+                @Override
+                public void onOpenProjectClicked() {
+
+                }
+            }));
+        }
     }
 
     @Override
@@ -199,11 +208,9 @@ public class SolidModelingGame extends VrGame {
     }
 
     private void createNewProject() {
-        setScreen(progressLoadingScreen);
-        loadingFailed = false;
         final String projectName = generateNewProjectName();
         Logger.d("new project created: " + projectName);
-        GdxVr.app.postRunnable(() -> setScreen(new MainScreen(SolidModelingGame.this, projectName)));
+        setScreen(new MainScreen(SolidModelingGame.this, projectName));
     }
 
     private void openProject(final File file) {
@@ -261,7 +268,8 @@ public class SolidModelingGame extends VrGame {
             intent.putExtra(Constants.KEY_FILE_PATH, file.getAbsolutePath());
             intent.putExtra(Constants.KEY_FILE_TYPE, Constants.FILE_TYPE_PROJECT);
             intent.putExtra(Constants.KEY_EXTERNAL, false);
-            activity.startService(intent);
+            // TODO: 5/1/2018 save project 
+//            activity.startService(intent);
         }
     }
 

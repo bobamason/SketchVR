@@ -35,8 +35,10 @@ public class SketchProjectEntity extends Entity {
         modelInstance.model.meshes.add(mesh);
         aabbTree = new AABBTree();
         if (nodes != null && !nodes.isEmpty()) {
-            for (SketchNode node : nodes)
+            for (SketchNode node : nodes) {
                 add(node);
+                insertIntoAABBTree(node);
+            }
         }
     }
 
@@ -52,13 +54,16 @@ public class SketchProjectEntity extends Entity {
 
         modelInstance.materials.add(nodePart.material);
         modelInstance.model.materials.add(nodePart.material);
-        aabbTree.insert(node);
+    }
 
+    public void insertIntoAABBTree(SketchNode node) {
+        node.updateBounds();
+        node.validate();
+        aabbTree.insert(node);
         getBounds().set(aabbTree.root.bb);
         getBounds().getDimensions(dimensions);
         radius = dimensions.len() / 2f;
     }
-
 
     public void remove(SketchNode node) {
         if (modelInstance != null) {

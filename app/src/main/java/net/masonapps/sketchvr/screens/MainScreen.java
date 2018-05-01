@@ -78,6 +78,7 @@ import org.masonapps.libgdxgooglevr.gfx.World;
 import org.masonapps.libgdxgooglevr.input.DaydreamButtonEvent;
 import org.masonapps.libgdxgooglevr.input.DaydreamTouchEvent;
 import org.masonapps.libgdxgooglevr.input.VrInputProcessor;
+import org.masonapps.libgdxgooglevr.ui.VrInputMultiplexer;
 import org.masonapps.libgdxgooglevr.utils.Logger;
 
 import java.util.ArrayList;
@@ -145,6 +146,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private MultiNodeSelector multiNodeSelector;
     //    private ViewAction viewAction = ACTION_NONE;
     private InputMode currentInputMode = InputMode.VIEW;
+    private VrInputMultiplexer inputMultiplexer;
 
     public MainScreen(SolidModelingGame game, String projectName) {
         this(game, projectName, new ArrayList<>());
@@ -162,7 +164,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         setBackgroundColor(Color.SKY);
         sketchMeshBuilder = new SketchMeshBuilder();
         manageDisposable(sketchMeshBuilder);
-        modelingProject = new SketchProjectEntity(sketchMeshBuilder.getMesh());
+        modelingProject = new SketchProjectEntity(sketchMeshBuilder.getMesh(), nodeList);
         undoRedoCache = new UndoRedoCache();
 
         final ModelBuilder modelBuilder = new ModelBuilder();
@@ -330,6 +332,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
                             sketchNode.scale.scl(selectedNode.scale);
                             sketchNode.invalidate();
                             modelingProject.add(sketchNode);
+                            modelingProject.insertIntoAABBTree(sketchNode);
                         }
                     }
                 }
@@ -383,6 +386,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
                     group.addChild(node);
                 }
                 modelingProject.add(group);
+                modelingProject.insertIntoAABBTree(group);
                 multiSelectNodes.clear();
             }
         });
@@ -404,16 +408,14 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         getWorld().add(modelingProject);
         modelingProject.setScale(projectScale);
 
-        for (SketchNode node : nodeList) {
-            modelingProject.add(node);
-        }
-
         // TODO: 3/23/2018 remove test 
         freeDrawInput = new FreeDrawInput(modelingProject, sketchMeshBuilder);
         pointInput = new PlanarPointsInput(modelingProject, point -> Logger.d("point added " + point));
         pointInput.getPlane().set(Vector3.Zero, Vector3.Z);
         singleNodeSelector = new SingleNodeSelector(modelingProject, this::setSelectedNode);
         inputProcessorChooser.setActiveProcessor(freeDrawInput);
+
+        inputMultiplexer = new VrInputMultiplexer(inputProcessorChooser, mainInterface);
     }
 
     private static Model createGrid(ModelBuilder builder, Skin skin, float radius) {
@@ -450,6 +452,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
     private void addNode(SketchNode node) {
         modelingProject.add(node);
+        modelingProject.insertIntoAABBTree(node);
         setSelectedNode(node);
         undoRedoCache.save(new AddAction(node, modelingProject));
     }
@@ -546,7 +549,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     @Override
     public void show() {
         super.show();
-        GdxVr.input.setInputProcessor(mainInterface);
+        GdxVr.input.setInputProcessor(inputMultiplexer);
         GdxVr.input.addDaydreamControllerListener(inputProcessorChooser);
         getVrCamera().position.set(0, 0f, 0);
         getVrCamera().lookAt(0, 0, -1);
@@ -812,7 +815,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         focusedNode = null;
         switch (currentState) {
             case STATE_NONE:
-                if (mainInterface.isCursorOver())
+                if (inputMultiplexer.isCursorOver())
                     currentInputMode = InputMode.UI;
                 else
                     currentInputMode = InputMode.VIEW;
