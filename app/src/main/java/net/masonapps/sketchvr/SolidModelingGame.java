@@ -249,7 +249,7 @@ public class SolidModelingGame extends VrGame {
 
     public void saveCurrentProject() {
         if (modelingScreen != null)
-            saveCurrentProject(modelingScreen.getModelingProject(), modelingScreen.getProjectName());
+            saveCurrentProject(modelingScreen.getProject(), modelingScreen.getProjectName());
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -362,7 +362,7 @@ public class SolidModelingGame extends VrGame {
     public void closeModelingScreen() {
         if (modelingScreen == null) return;
         modelingScreen.hide();
-        saveCurrentProject(modelingScreen.getModelingProject(), modelingScreen.getProjectName());
+        saveCurrentProject(modelingScreen.getProject(), modelingScreen.getProjectName());
         modelingScreen.dispose();
         modelingScreen = null;
     }

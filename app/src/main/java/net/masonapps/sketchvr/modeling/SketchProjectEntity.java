@@ -3,7 +3,6 @@ package net.masonapps.sketchvr.modeling;
 import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.Node;
@@ -24,15 +23,17 @@ import java.util.List;
 public class SketchProjectEntity extends Entity {
 
     private final AABBTree aabbTree;
+    private final SketchMeshBuilder builder;
 
-    public SketchProjectEntity(Mesh mesh) {
-        this(mesh, null);
+    public SketchProjectEntity(SketchMeshBuilder builder) {
+        this(builder, null);
     }
 
     @SuppressWarnings("ConstantConditions")
-    public SketchProjectEntity(Mesh mesh, @Nullable List<SketchNode> nodes) {
+    public SketchProjectEntity(SketchMeshBuilder builder, @Nullable List<SketchNode> nodes) {
         super(new ModelInstance(new Model()));
-        modelInstance.model.meshes.add(mesh);
+        this.builder = builder;
+        modelInstance.model.meshes.add(builder.getMesh());
         aabbTree = new AABBTree();
         if (nodes != null && !nodes.isEmpty()) {
             for (SketchNode node : nodes) {
@@ -61,8 +62,7 @@ public class SketchProjectEntity extends Entity {
         node.validate();
         aabbTree.insert(node);
         getBounds().set(aabbTree.root.bb);
-        getBounds().getDimensions(dimensions);
-        radius = dimensions.len() / 2f;
+        updateDimensions();
     }
 
     public void remove(SketchNode node) {
@@ -124,5 +124,9 @@ public class SketchProjectEntity extends Entity {
 
     public AABBTree getAABBTree() {
         return aabbTree;
+    }
+
+    public SketchMeshBuilder getBuilder() {
+        return builder;
     }
 }

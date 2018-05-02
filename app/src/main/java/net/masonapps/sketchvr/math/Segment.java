@@ -11,17 +11,19 @@ public class Segment implements Pool.Poolable {
 
     private final Vector3 n = new Vector3();
     private final Vector3 v = new Vector3();
-    public Vector3 p1;
-    public Vector3 p2;
+    public Vector3 p1 = new Vector3();
+    public Vector3 p2 = new Vector3();
+    public Vector3 direction = new Vector3();
 
     public Segment() {
-        this.p1 = new Vector3();
-        this.p2 = new Vector3();
     }
 
     public Segment(Vector3 p1, Vector3 p2) {
-        this.p1 = p1.cpy();
-        this.p2 = p2.cpy();
+        set(p1, p2);
+    }
+
+    public Segment(Segment other) {
+        set(other);
     }
 
     public float length() {
@@ -81,9 +83,10 @@ public class Segment implements Pool.Poolable {
         set(segment.p1, segment.p2);
     }
 
-    public void set(Vector3 p0, Vector3 p1) {
-        this.p1.set(p0);
-        this.p2.set(p1);
+    public void set(Vector3 p1, Vector3 p2) {
+        this.p1.set(p1);
+        this.p2.set(p2);
+        direction.set(p2).sub(p1).nor();
     }
 
     @Override

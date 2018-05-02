@@ -5,9 +5,11 @@ import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 
+import net.masonapps.sketchvr.math.Segment;
 import net.masonapps.sketchvr.mesh.Stroke;
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
 import net.masonapps.sketchvr.modeling.SketchNode;
@@ -23,13 +25,17 @@ public class FreeDrawInput extends ModelingInputProcessor {
 
     private final SketchMeshBuilder builder;
     private float drawDistance = 3f;
-    private Stroke stroke = new Stroke();
-    private Vector3 tmpPoint = new Vector3();
+    private final Stroke stroke = new Stroke();
+    private final Vector3 tmpPoint = new Vector3();
     private boolean isDrawing = false;
+    private final Segment seg1 = new Segment();
+    private final Segment seg2 = new Segment();
+    private final Plane tmpPlane = new Plane();
+    private final Plane tmpPlane2 = new Plane();
 
-    public FreeDrawInput(SketchProjectEntity project, SketchMeshBuilder builder) {
+    public FreeDrawInput(SketchProjectEntity project) {
         super(project);
-        this.builder = builder;
+        this.builder = project.getBuilder();
     }
 
     @Override
@@ -64,16 +70,18 @@ public class FreeDrawInput extends ModelingInputProcessor {
         builder.begin();
         final int pointCount = stroke.getPointCount();
         for (int i = 1; i < pointCount; i++) {
-            final Vector3 p1 = stroke.points.get(i - 1);
-            final Vector3 p2 = stroke.points.get(i);
-            final Vector3 p3 = new Vector3();
-            final Vector3 p4 = new Vector3();
-            // TODO: 4/30/2018 remove test 
-            p3.set(p2).add(0, 0.1f, 0);
-            p4.set(p1).add(0, 0.1f, 0);
-            p1.sub(0, 0.1f, 0);
-            p2.sub(0, 0.1f, 0);
-            builder.rect2sided(p1, p2, p3, p4);
+            seg1.set(stroke.points.get(i - 1), stroke.points.get(i));
+            if (i == 1) {
+                tmpPlane.set(seg1.p1, seg1.direction);
+                // TODO: 5/2/2018 start cap 
+            } else if (i == pointCount - 1) {
+                tmpPlane.set(seg1.p1.x, seg1.p1.y, seg1.p1.z, -seg1.direction.x, -seg1.direction.y, -seg1.direction.z);
+                // TODO: 5/2/2018 end cap 
+            } else {
+                seg2.set(stroke.points.get(i), stroke.points.get(i + 1));
+                tmpPlane2.set(seg1.p1, seg1.direction);
+            }
+
         }
         final MeshPart meshPart = builder.end();
         if (meshPart.size > 0) {

@@ -12,9 +12,12 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 
+import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
+import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.math.PlaneUtils;
+import org.masonapps.libgdxgooglevr.utils.Logger;
 
 /**
  * Created by Bob Mason on 3/22/2018.
@@ -28,12 +31,14 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     private final FloatArray vertices = new FloatArray();
     private final Vector3 point = new Vector3();
     private final Vector3 hitPoint3D = new Vector3();
+    private final SketchMeshBuilder builder;
     private final OnPointAddedListener listener;
     protected boolean isCursorOver = false;
     private Ray transformedRay = new Ray();
 
     public PlanarPointsInput(SketchProjectEntity project, OnPointAddedListener listener) {
         super(project);
+        this.builder = project.getBuilder();
         this.listener = listener;
     }
 
@@ -53,6 +58,8 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     public boolean performRayTest(Ray ray) {
         transformedRay.set(ray).mul(project.getInverseTransform());
         isCursorOver = Intersector.intersectRayPlane(transformedRay, plane, point);
+        if (isCursorOver && points.size > 1 && point.dst(points.get(0)) < 0.1f)
+            point.set(points.get(0));
         if (isCursorOver) hitPoint3D.set(point).mul(project.getTransform());
         return isCursorOver;
     }
@@ -105,8 +112,23 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             PlaneUtils.toSubSpace(plane, cpy, hitPoint2D);
             vertices.add(hitPoint2D.x);
             vertices.add(hitPoint2D.y);
+            if (points.size > 1 && cpy.epsilonEquals(points.get(0), 0.001f)) {
+                closePath();
+            }
         }
         return isCursorOver;
+    }
+
+    private void closePath() {
+        if (vertices.size < 6) return;
+        Logger.d("closing path: polygon has " + (vertices.size / 2) + " vertices");
+        builder.begin();
+        builder.polygonExtruded(vertices, plane, 0.5f);
+        vertices.clear();
+        points.clear();
+        final SketchNode node = new SketchNode(builder.end());
+        project.add(node);
+        project.insertIntoAABBTree(node);
     }
 
     @Override

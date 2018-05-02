@@ -14,6 +14,7 @@ import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.GdxRuntimeException;
@@ -26,8 +27,10 @@ import org.masonapps.libgdxgooglevr.math.PlaneUtils;
  */
 public class SketchMeshBuilder implements Disposable {
     private final static Vector3 vTmp = new Vector3();
+    private final static Array<Vector3> tmpVecs = new Array<>();
     private final static Vector2 v2Tmp = new Vector2();
     private final static Vector3 normal = new Vector3();
+    private final static ShortArray tmpIndices = new ShortArray();
     private final MeshPartBuilder.VertexInfo vertTmp1 = new MeshPartBuilder.VertexInfo();
     private final MeshPartBuilder.VertexInfo vertTmp2 = new MeshPartBuilder.VertexInfo();
     private final MeshPartBuilder.VertexInfo vertTmp3 = new MeshPartBuilder.VertexInfo();
@@ -487,14 +490,36 @@ public class SketchMeshBuilder implements Disposable {
         rect(x01, y01, z01, x11, y11, z11, x10, y10, z10, x00, y00, z00);
     }
 
+    private static boolean areVerticesClockwise(float[] vertices, int offset, int count) {
+        if (count <= 2) return false;
+        float area = 0, p1x, p1y, p2x, p2y;
+        for (int i = offset, n = offset + count - 3; i < n; i += 2) {
+            p1x = vertices[i];
+            p1y = vertices[i + 1];
+            p2x = vertices[i + 2];
+            p2y = vertices[i + 3];
+            area += p1x * p2y - p2x * p1y;
+        }
+        p1x = vertices[offset + count - 2];
+        p1y = vertices[offset + count - 1];
+        p2x = vertices[offset];
+        p2y = vertices[offset + 1];
+        return area + p1x * p2y - p2x * p1y < 0;
+    }
+
     public void polygon(FloatArray vertices, Plane plane) {
         if (vertices.size < 6) return;
         final ShortArray triIndices = triangulator.computeTriangles(vertices);
-        for (int i = 0; i < triIndices.size; i++) {
-            final int iv = triIndices.get(i) * 2;
-            v2Tmp.set(vertices.get(iv), vertices.get(iv + 1));
+        tmpIndices.clear();
+        for (int i = 0; i < vertices.size; i += 2) {
+            v2Tmp.set(vertices.get(i), vertices.get(i + 1));
             PlaneUtils.toSpace(plane, v2Tmp, vTmp);
-            index(vertex(vertTmp1.set(null, null, null, null).setPos(vTmp).setNor(plane.normal).setUV(0f, 1f)));
+            tmpIndices.add(vertex(vertTmp1.set(vTmp, plane.normal, null, null)));
+        }
+        tmpIndices.reverse();
+        ensureIndices(triIndices.size);
+        for (int i = 0; i < triIndices.size; i++) {
+            index(tmpIndices.get(triIndices.get(i)));
         }
     }
 
@@ -502,6 +527,48 @@ public class SketchMeshBuilder implements Disposable {
         return mesh;
     }
 
+    public void polygonExtruded(FloatArray vertices, Plane plane, float depth) {
+        if (vertices.size < 6) return;
+        final ShortArray triIndices = triangulator.computeTriangles(vertices);
+        tmpIndices.clear();
+        tmpVecs.clear();
+        for (int i = 0; i < vertices.size; i += 2) {
+            v2Tmp.set(vertices.get(i), vertices.get(i + 1));
+            PlaneUtils.toSpace(plane, v2Tmp, vTmp);
+            vertTmp1.set(vTmp, plane.normal, null, null);
+            vertTmp1.position.set(plane.normal).scl(-depth / 2f).add(vTmp);
+            vertTmp1.normal.scl(-1);
+            tmpVecs.add(vertTmp1.position.cpy());
+            tmpIndices.add(vertex(vertTmp1));
+        }
+        ensureIndices(triIndices.size * 2);
+        for (int i = 0; i < triIndices.size; i++) {
+            index(tmpIndices.get(triIndices.get(i)));
+        }
+        tmpIndices.clear();
+        int n = tmpVecs.size;
+        for (int i = 0; i < n; i++) {
+            vTmp.set(tmpVecs.get(i));
+            vertTmp1.set(vTmp, plane.normal, null, null);
+            vertTmp1.position.set(plane.normal).scl(depth / 2f).add(vTmp);
+            tmpVecs.add(vertTmp1.position.cpy());
+            tmpIndices.add(vertex(vertTmp1));
+        }
+        triIndices.reverse();
+        for (int i = 0; i < triIndices.size; i++) {
+            index(tmpIndices.get(triIndices.get(i)));
+        }
+
+        final int halfVerts = tmpVecs.size / 2;
+        if (areVerticesClockwise(vertices.items, 0, vertices.size)) {
+            for (int i = 0; i < halfVerts - 1; i++)
+                rect(tmpVecs.get(i + halfVerts), tmpVecs.get(i + halfVerts + 1), tmpVecs.get(i + 1), tmpVecs.get(i));
+        } else {
+            for (int i = 0; i < halfVerts - 1; i++)
+                rect(tmpVecs.get(i), tmpVecs.get(i + 1), tmpVecs.get(i + halfVerts + 1), tmpVecs.get(i + halfVerts));
+        }
+    }
+    
     @Override
     public void dispose() {
         vertices.clear();

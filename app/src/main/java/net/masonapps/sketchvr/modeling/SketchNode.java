@@ -172,7 +172,7 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         // TODO: 4/27/2018 ray test shape or path
         boolean rayTest;
 //        intersection.normal.set(0, 0, 0);
-//        transformedRay.set(ray).mul(inverseTransform);
+        transformedRay.set(ray).mul(inverseTransform);
 //        if (isGroup || bvh == null)
 //            rayTest = Intersector.intersectRayBounds(transformedRay, bounds, intersection.hitPoint);
 //        else

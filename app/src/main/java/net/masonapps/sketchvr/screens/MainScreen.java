@@ -129,7 +129,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     @Nullable
     private SketchNode selectedNode = null;
     private List<SketchNode> multiSelectNodes = new ArrayList<>();
-    private SketchProjectEntity modelingProject;
+    private SketchProjectEntity project;
     private Vector3 hitPoint = new Vector3();
     private AABBTree.IntersectionInfo intersectionInfo = new AABBTree.IntersectionInfo();
     private SimpleGrabControls grabControls = new SimpleGrabControls();
@@ -164,7 +164,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         setBackgroundColor(Color.SKY);
         sketchMeshBuilder = new SketchMeshBuilder();
         manageDisposable(sketchMeshBuilder);
-        modelingProject = new SketchProjectEntity(sketchMeshBuilder.getMesh(), nodeList);
+        project = new SketchProjectEntity(sketchMeshBuilder, nodeList);
         undoRedoCache = new UndoRedoCache();
 
         final ModelBuilder modelBuilder = new ModelBuilder();
@@ -206,11 +206,11 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         rotationAnimator = new Animator(new Animator.AnimationListener() {
             @Override
             public void apply(float value) {
-                final Quaternion rot = modelingProject.getRotation();
+                final Quaternion rot = project.getRotation();
                 rot.set(rotation).slerp(snappedRotation, value);
                 lastRotation.set(rot);
-                modelingProject.invalidate();
-                transformUI.setTransform(modelingProject.getTransform());
+                project.invalidate();
+                transformUI.setTransform(project.getTransform());
             }
 
             @Override
@@ -224,9 +224,9 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         positionAnimator = new Animator(new Animator.AnimationListener() {
             @Override
             public void apply(float value) {
-                modelingProject.getPosition().set(position).slerp(snappedPosition, value);
-                modelingProject.invalidate();
-                transformUI.setTransform(modelingProject.getTransform());
+                project.getPosition().set(position).slerp(snappedPosition, value);
+                project.invalidate();
+                transformUI.setTransform(project.getTransform());
             }
 
             @Override
@@ -241,19 +241,19 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         final SpriteBatch spriteBatch = new SpriteBatch();
         manageDisposable(shapeRenderer, spriteBatch);
 
-        modelingProject.setPosition(projectPosition);
+        project.setPosition(projectPosition);
 
 
-        addNodeInput = new AddNodeInput(modelingProject, node -> Logger.d("node added"));
+        addNodeInput = new AddNodeInput(project, node -> Logger.d("node added"));
 
-        multiNodeSelector = new MultiNodeSelector(modelingProject, nodes -> {
+        multiNodeSelector = new MultiNodeSelector(project, nodes -> {
             selectionBox.inf();
             nodes.forEach(node -> selectionBox.ext(node.getAABB()));
             multiSelectNodes.clear();
             multiSelectNodes.addAll(nodes);
         });
 
-        exportDialog = new ExportDialog(spriteBatch, skin, (projectName1, fileType, transform) -> getSolidModelingGame().exportFile(modelingProject, projectName1, fileType, transform));
+        exportDialog = new ExportDialog(spriteBatch, skin, (projectName1, fileType, transform) -> getSolidModelingGame().exportFile(project, projectName1, fileType, transform));
         exportDialog.setPosition(0, 0, -2);
 
         final MainInterface.UiEventListener uiEventListener = new MainInterface.UiEventListener() {
@@ -266,8 +266,8 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             @Override
             public void onDeleteClicked() {
                 if (selectedNode != null) {
-                    modelingProject.remove(selectedNode);
-                    undoRedoCache.save(new RemoveAction(selectedNode, modelingProject));
+                    project.remove(selectedNode);
+                    undoRedoCache.save(new RemoveAction(selectedNode, project));
                     setSelectedNode(null);
                 }
             }
@@ -321,7 +321,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             @Override
             public void onUnGroupClicked() {
                 if (selectedNode != null && selectedNode.isGroup()) {
-                    modelingProject.remove(selectedNode);
+                    project.remove(selectedNode);
                     final int n = selectedNode.getChildCount();
                     for (int i = 0; i < n; i++) {
                         final Node child = selectedNode.getChild(i);
@@ -331,8 +331,8 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
                             sketchNode.rotation.mulLeft(selectedNode.rotation);
                             sketchNode.scale.scl(selectedNode.scale);
                             sketchNode.invalidate();
-                            modelingProject.add(sketchNode);
-                            modelingProject.insertIntoAABBTree(sketchNode);
+                            project.add(sketchNode);
+                            project.insertIntoAABBTree(sketchNode);
                         }
                     }
                 }
@@ -368,7 +368,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
                 }
                 snappedPosition.set(center).scl(-1).mul(rotation).add(projectPosition);
                 position.set(snappedPosition);
-                modelingProject.setPosition(position);
+                project.setPosition(position);
             }
         });
 
@@ -382,11 +382,11 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             public void onDoneClicked() {
                 final SketchNode group = new SketchNode();
                 for (SketchNode node : multiSelectNodes) {
-                    modelingProject.remove(node);
+                    project.remove(node);
                     group.addChild(node);
                 }
-                modelingProject.add(group);
-                modelingProject.insertIntoAABBTree(group);
+                project.add(group);
+                project.insertIntoAABBTree(group);
                 multiSelectNodes.clear();
             }
         });
@@ -402,20 +402,20 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
         gridEntity = new Entity(new ModelInstance(createGrid(modelBuilder, skin, 3f)));
         gridEntity.setLightingEnabled(false);
-        getWorld().add(gridEntity).setTransform(modelingProject.getTransform());
+        getWorld().add(gridEntity).setTransform(project.getTransform());
         gridEntity.setVisible(false);
 
-        getWorld().add(modelingProject);
-        modelingProject.setScale(projectScale);
+        getWorld().add(project);
+        project.setScale(projectScale);
 
         // TODO: 3/23/2018 remove test 
-        freeDrawInput = new FreeDrawInput(modelingProject, sketchMeshBuilder);
-        pointInput = new PlanarPointsInput(modelingProject, point -> Logger.d("point added " + point));
+        freeDrawInput = new FreeDrawInput(project);
+        pointInput = new PlanarPointsInput(project, point -> Logger.d("point added " + point));
         pointInput.getPlane().set(Vector3.Zero, Vector3.Z);
-        singleNodeSelector = new SingleNodeSelector(modelingProject, this::setSelectedNode);
-        inputProcessorChooser.setActiveProcessor(freeDrawInput);
+        singleNodeSelector = new SingleNodeSelector(project, this::setSelectedNode);
+        inputProcessorChooser.setActiveProcessor(pointInput);
 
-        inputMultiplexer = new VrInputMultiplexer(inputProcessorChooser, mainInterface);
+        inputMultiplexer = new VrInputMultiplexer(mainInterface, inputProcessorChooser);
     }
 
     private static Model createGrid(ModelBuilder builder, Skin skin, float radius) {
@@ -451,15 +451,15 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     }
 
     private void addNode(SketchNode node) {
-        modelingProject.add(node);
-        modelingProject.insertIntoAABBTree(node);
+        project.add(node);
+        project.insertIntoAABBTree(node);
         setSelectedNode(node);
-        undoRedoCache.save(new AddAction(node, modelingProject));
+        undoRedoCache.save(new AddAction(node, project));
     }
 
     protected void drawEntityBounds(ShapeRenderer shapeRenderer, SketchNode entity, Color color) {
         shapeRenderer.setColor(color);
-        shapeRenderer.setTransformMatrix(modelingProject.getTransform());
+        shapeRenderer.setTransformMatrix(project.getTransform());
         final BoundingBox bounds = entity.getAABB();
         drawBounds(shapeRenderer, bounds);
     }
@@ -467,7 +467,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     protected void drawSelectionBox(ShapeRenderer shapeRenderer, Color color) {
         if (!selectionBox.isValid()) return;
         shapeRenderer.setColor(color);
-        shapeRenderer.setTransformMatrix(modelingProject.getTransform());
+        shapeRenderer.setTransformMatrix(project.getTransform());
         drawBounds(shapeRenderer, selectionBox);
     }
 
@@ -495,7 +495,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
                 transformUI.setVisible(false);
                 break;
         }
-        transformUI.setEntity(selectedNode, modelingProject);
+        transformUI.setEntity(selectedNode, project);
         mainInterface.setEditMode(mode);
         if (transformUI.isVisible())
             inputProcessorChooser.setActiveProcessor(transformUI);
@@ -512,7 +512,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             @Override
             public void update() {
                 super.update();
-                modelingProject.update();
+                project.update();
                 transformUI.update();
             }
 
@@ -577,7 +577,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     @Override
     public void update() {
         super.update();
-        grabControls.update(hitPoint, modelingProject);
+        grabControls.update(hitPoint, project);
         // TODO: 3/28/2018 remove 
 //        if (currentInputMode == InputMode.SELECT || currentInputMode == InputMode.MULTI_SELECT || currentInputMode == InputMode.EDIT)
 //            getSolidModelingGame().getCursor().position.set(hitPoint);
@@ -615,7 +615,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         GdxVr.gl.glEnable(GL20.GL_DEPTH_TEST);
         shapeRenderer.begin();
         shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.setTransformMatrix(modelingProject.getTransform());
+        shapeRenderer.setTransformMatrix(project.getTransform());
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.line(0, 0, 0, 1, 0, 0);
         shapeRenderer.setColor(Color.GREEN);
@@ -629,8 +629,8 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
         shapeRenderer.begin();
         shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.setTransformMatrix(modelingProject.getTransform());
-//        AABBTree.debugAABBTree(shapeRenderer, project.getAABBTree(), Color.YELLOW);
+        shapeRenderer.setTransformMatrix(project.getTransform());
+        AABBTree.debugAABBTree(shapeRenderer, project.getAABBTree(), Color.YELLOW);
         transformUI.drawShapes(shapeRenderer);
 
         if (inputProcessorChooser.getActiveProcessor() instanceof ModelingInputProcessor)
@@ -648,14 +648,14 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 //        Logger.d("rotDiff " + rotDiff);
 
         rotation.mulLeft(rotDiff);
-        modelingProject.setRotation(rotation);
+        project.setRotation(rotation);
         position.set(center).scl(-1).mul(rotation).add(projectPosition);
-        modelingProject.setPosition(position);
+        project.setPosition(position);
 //        gridEntity.setPosition(project.getPosition());
 //        gridEntity.setRotation(project.getRotation());
         lastRotation.set(GdxVr.input.getControllerOrientation());
         Pools.free(rotDiff);
-        transformUI.setTransform(modelingProject.getTransform());
+        transformUI.setTransform(project.getTransform());
     }
 
     @Override
@@ -725,7 +725,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             case DaydreamTouchEvent.ACTION_MOVE:
                 final float dx = event.x - 0.5f - vec2.x;
                 final float dy = event.y - 0.5f - vec2.y;
-                final float min = 0.25f * 0.25f;
+                final float min = 0.5f * 0.5f;
                 final float dx2 = dx * dx;
                 final float dy2 = dy * dy;
                 // TODO: 3/28/2018 remove 
@@ -826,8 +826,8 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         }
     }
 
-    public SketchProjectEntity getModelingProject() {
-        return modelingProject;
+    public SketchProjectEntity getProject() {
+        return project;
     }
 
     public SketchMeshBuilder getSketchMeshBuilder() {
