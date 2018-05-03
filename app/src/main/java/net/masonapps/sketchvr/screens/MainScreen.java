@@ -163,7 +163,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
         setBackgroundColor(Color.SKY);
         sketchMeshBuilder = new SketchMeshBuilder();
-        manageDisposable(sketchMeshBuilder);
         project = new SketchProjectEntity(sketchMeshBuilder, nodeList);
         undoRedoCache = new UndoRedoCache();
 
@@ -331,8 +330,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
                             sketchNode.rotation.mulLeft(selectedNode.rotation);
                             sketchNode.scale.scl(selectedNode.scale);
                             sketchNode.invalidate();
-                            project.add(sketchNode);
-                            project.insertIntoAABBTree(sketchNode);
+                            project.add(sketchNode, true);
                         }
                     }
                 }
@@ -385,8 +383,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
                     project.remove(node);
                     group.addChild(node);
                 }
-                project.add(group);
-                project.insertIntoAABBTree(group);
+                project.add(group, true);
                 multiSelectNodes.clear();
             }
         });
@@ -451,8 +448,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     }
 
     private void addNode(SketchNode node) {
-        project.add(node);
-        project.insertIntoAABBTree(node);
+        project.add(node, true);
         setSelectedNode(node);
         undoRedoCache.save(new AddAction(node, project));
     }
@@ -630,7 +626,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         shapeRenderer.begin();
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.setTransformMatrix(project.getTransform());
-        AABBTree.debugAABBTree(shapeRenderer, project.getAABBTree(), Color.YELLOW);
+//        AABBTree.debugAABBTree(shapeRenderer, project.getAABBTree(), Color.YELLOW);
         transformUI.drawShapes(shapeRenderer);
 
         if (inputProcessorChooser.getActiveProcessor() instanceof ModelingInputProcessor)

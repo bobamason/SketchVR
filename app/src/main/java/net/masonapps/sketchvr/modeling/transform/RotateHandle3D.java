@@ -172,13 +172,13 @@ public class RotateHandle3D extends DragHandle3D {
     private float calculateAngleX() {
         if (transformable != null)
             PlaneUtils.toSubSpace(plane, tmpV.set(transformable.getPosition()).sub(getHitPoint3D()), vec2);
-        return -MathUtils.atan2(vec2.y, vec2.x) * MathUtils.radiansToDegrees;
+        return MathUtils.atan2(vec2.y, vec2.x) * MathUtils.radiansToDegrees;
     }
 
     private float calculateAngleY() {
         if (transformable != null)
             PlaneUtils.toSubSpace(plane, tmpV.set(transformable.getPosition()).sub(getHitPoint3D()), vec2);
-        return MathUtils.atan2(-vec2.y, vec2.x) * MathUtils.radiansToDegrees;
+        return -MathUtils.atan2(-vec2.y, vec2.x) * MathUtils.radiansToDegrees;
     }
 
     @SuppressWarnings("SuspiciousNameCombination")

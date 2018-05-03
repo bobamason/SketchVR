@@ -23,7 +23,6 @@ public class RemoveAction extends Action {
 
     @Override
     public void undoAction() {
-        project.add(getNode());
-        project.insertIntoAABBTree(getNode());
+        project.add(getNode(), true);
     }
 }

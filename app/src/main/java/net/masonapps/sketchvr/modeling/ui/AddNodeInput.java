@@ -138,8 +138,7 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
                         previewNode.getPosition().mul(project.getInverseTransform());
                         previewNode.getRotation().mul(new Quaternion(project.getRotation()).conjugate());
                         previewNode.invalidate();
-                        project.add(copy);
-                        project.insertIntoAABBTree(copy);
+                        project.add(copy, true);
                         listener.nodeAdded(copy);
                     }
                     break;

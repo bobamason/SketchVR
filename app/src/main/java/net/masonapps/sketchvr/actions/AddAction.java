@@ -18,8 +18,7 @@ public class AddAction extends Action {
 
     @Override
     public void redoAction() {
-        project.add(getNode());
-        project.insertIntoAABBTree(getNode());
+        project.add(getNode(), true);
     }
 
     @Override

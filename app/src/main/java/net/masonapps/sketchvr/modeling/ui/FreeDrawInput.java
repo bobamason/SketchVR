@@ -1,6 +1,7 @@
 package net.masonapps.sketchvr.modeling.ui;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
@@ -68,6 +69,7 @@ public class FreeDrawInput extends ModelingInputProcessor {
         isDrawing = false;
         stroke.simplifyBySegmentLength(0.125f);
         builder.begin();
+        final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
         final int pointCount = stroke.getPointCount();
         for (int i = 1; i < pointCount; i++) {
             seg1.set(stroke.points.get(i - 1), stroke.points.get(i));
@@ -83,11 +85,10 @@ public class FreeDrawInput extends ModelingInputProcessor {
             }
 
         }
-        final MeshPart meshPart = builder.end();
+        builder.end();
         if (meshPart.size > 0) {
             final SketchNode node = new SketchNode(meshPart, new Material(ColorAttribute.createDiffuse(Color.GREEN), ColorAttribute.createAmbient(Color.GREEN)));
-            project.add(node);
-            project.insertIntoAABBTree(node);
+            project.add(node, true);
         }
         stroke.clear();
         return true;

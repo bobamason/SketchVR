@@ -2,7 +2,9 @@ package net.masonapps.sketchvr.modeling.ui;
 
 import android.support.annotation.Nullable;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.collision.BoundingBox;
 
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
@@ -49,7 +51,11 @@ public class SingleNodeSelector extends ModelingInputProcessor {
 
     @Override
     public void draw(ShapeRenderer shapeRenderer) {
-
+        if (selectedNode != null) {
+            shapeRenderer.setColor(Color.LIGHT_GRAY);
+            final BoundingBox bb = selectedNode.getAABB();
+            shapeRenderer.box(bb.min.x, bb.min.y, bb.min.z, bb.getWidth(), bb.getHeight(), bb.getDepth());
+        }
     }
 
     public interface OnNodeSelectedListener {

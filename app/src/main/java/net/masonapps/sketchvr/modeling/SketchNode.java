@@ -19,6 +19,7 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.utils.IntSet;
 import com.badlogic.gdx.utils.Pools;
 
 import net.masonapps.sketchvr.actions.TransformAction;
@@ -37,6 +38,7 @@ import org.masonapps.libgdxgooglevr.gfx.AABBTree;
 
 public class SketchNode extends Node implements AABBTree.AABBObject {
 
+    public static final IntSet usedIndices = new IntSet();
     public static final String KEY_PRIMITIVE = "primitive";
     public static final String KEY_MESH = "mesh";
     public static final String KEY_GROUP = "group";
@@ -77,8 +79,49 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     public SketchNode(@NonNull MeshPart meshPart, @Nullable Material material) {
         super();
         parts.add(new NodePart(meshPart, material == null ? createDefaultMaterial() : material));
+        recenter(meshPart);
         invalidate();
         isGroup = false;
+    }
+
+//    private void recenter(MeshPart meshPart) {
+//        usedIndices.clear();
+//        usedIndices.ensureCapacity(meshPart.size);
+//        final Vector3 center = meshPart.center;
+//        final int stride = meshPart.mesh.getVertexSize() / Float.BYTES;
+//        final FloatBuffer verticesBuffer = meshPart.mesh.getVerticesBuffer();
+//        final ShortBuffer indicesBuffer = meshPart.mesh.getIndicesBuffer();
+//        verticesBuffer.position(0);
+//        indicesBuffer.position(0);
+//        for (int i = meshPart.offset; i < meshPart.size + meshPart.offset; i++) {
+//            final short index = indicesBuffer.get(i);
+//            if (usedIndices.contains(index))
+//                continue;
+//            final int iv = index * stride;
+//            float x = verticesBuffer.get(iv);
+//            verticesBuffer.put(iv, x - center.x);
+//            float y = verticesBuffer.get(iv + 1);
+//            verticesBuffer.put(iv + 1, y - center.y);
+//            float z = verticesBuffer.get(iv + 2);
+//            verticesBuffer.put(iv + 2, z - center.z);
+//            usedIndices.add(index);
+//        }
+////        Logger.d("meshPart " + meshPart.id + " indices = " + usedIndices.toString());
+//        usedIndices.clear();
+//        setPosition(meshPart.center);
+//        meshPart.center.set(0, 0, 0);
+//        meshPart.mesh.updateVertices(0, new float[0]);
+//    }
+
+    /**
+     * only works when there is one mesh per node
+     *
+     * @param meshPart with meshPart.offset = 0 meshPart.size = mesh.getNumIndices()
+     */
+    private void recenter(MeshPart meshPart) {
+        setPosition(meshPart.center);
+        meshPart.mesh.transform(new Matrix4().translate(-meshPart.center.x, -meshPart.center.y, -meshPart.center.z));
+        meshPart.center.set(0, 0, 0);
     }
 
     public static SketchNode fromJSONObject(JSONObject jsonObject) throws JSONException {
@@ -145,8 +188,18 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     }
 
     public void updateBounds() {
+        if (parts.size == 0) {
+            bounds.clr();
+            return;
+        }
         bounds.inf();
-        extendBoundingBox(bounds, false);
+        for (NodePart part : parts) {
+            final MeshPart meshPart = part.meshPart;
+            final Vector3 halfExtents = meshPart.halfExtents;
+            final Vector3 center = meshPart.center;
+            bounds.ext(center.x + halfExtents.x, center.y + halfExtents.y, center.z + halfExtents.z);
+            bounds.ext(center.x - halfExtents.x, center.y - halfExtents.y, center.z - halfExtents.z);
+        }
     }
 
     @Nullable

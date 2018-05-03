@@ -3,6 +3,8 @@ package net.masonapps.sketchvr.modeling.ui;
 import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Plane;
@@ -123,12 +125,13 @@ public class PlanarPointsInput extends ModelingInputProcessor {
         if (vertices.size < 6) return;
         Logger.d("closing path: polygon has " + (vertices.size / 2) + " vertices");
         builder.begin();
+        final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
         builder.polygonExtruded(vertices, plane, 0.5f);
         vertices.clear();
         points.clear();
-        final SketchNode node = new SketchNode(builder.end());
-        project.add(node);
-        project.insertIntoAABBTree(node);
+        builder.end();
+        final SketchNode node = new SketchNode(meshPart);
+        project.add(node, true);
     }
 
     @Override

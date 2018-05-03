@@ -33,18 +33,16 @@ public class SketchProjectEntity extends Entity {
     public SketchProjectEntity(SketchMeshBuilder builder, @Nullable List<SketchNode> nodes) {
         super(new ModelInstance(new Model()));
         this.builder = builder;
-        modelInstance.model.meshes.add(builder.getMesh());
         aabbTree = new AABBTree();
         if (nodes != null && !nodes.isEmpty()) {
             for (SketchNode node : nodes) {
-                add(node);
-                insertIntoAABBTree(node);
+                add(node, true);
             }
         }
     }
 
 
-    public void add(SketchNode node) {
+    public void add(SketchNode node, boolean insertIntoTree) {
         if (modelInstance == null) return;
 
         modelInstance.nodes.add(node);
@@ -52,9 +50,13 @@ public class SketchProjectEntity extends Entity {
 
         final NodePart nodePart = node.parts.get(0);
         modelInstance.model.meshParts.add(nodePart.meshPart);
+        modelInstance.model.meshes.add(nodePart.meshPart.mesh);
 
         modelInstance.materials.add(nodePart.material);
         modelInstance.model.materials.add(nodePart.material);
+
+        if (insertIntoTree)
+            insertIntoAABBTree(node);
     }
 
     public void insertIntoAABBTree(SketchNode node) {
