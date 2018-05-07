@@ -14,12 +14,15 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 
+import net.masonapps.sketchvr.mesh.Sketch2D;
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.math.PlaneUtils;
 import org.masonapps.libgdxgooglevr.utils.Logger;
+
+import java.util.List;
 
 /**
  * Created by Bob Mason on 3/22/2018.
@@ -30,7 +33,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     private final Plane plane = new Plane();
     private final Array<Vector3> points = new Array<>();
     private final Vector2 hitPoint2D = new Vector2();
-    private final FloatArray vertices = new FloatArray();
+    private final Sketch2D sketch2D = new Sketch2D();
     private final Vector3 point = new Vector3();
     private final Vector3 hitPoint3D = new Vector3();
     private final SketchMeshBuilder builder;
@@ -85,21 +88,23 @@ public class PlanarPointsInput extends ModelingInputProcessor {
 
     @Override
     public void draw(ShapeRenderer shapeRenderer) {
-        if (points.size == 0) return;
+        if (sketch2D.points.isEmpty()) return;
         shapeRenderer.setColor(Color.GREEN);
-        for (int i = 0; i < points.size; i++) {
-            if (i == points.size - 1) {
+        final Vector3 p1 = new Vector3();
+        final Vector3 p2 = new Vector3();
+        for (int i = 0; i < sketch2D.points.size(); i++) {
+            if (i == sketch2D.points.size() - 1) {
                 if (isCursorOver)
-                    shapeRenderer.line(points.get(i), point);
+                    shapeRenderer.line(PlaneUtils.toSpace(plane, sketch2D.points.get(i).point, p1), point);
             } else {
-                shapeRenderer.line(points.get(i), points.get(i + 1));
+                shapeRenderer.line(PlaneUtils.toSpace(plane, sketch2D.points.get(i).point, p1), PlaneUtils.toSpace(plane, sketch2D.points.get(i + 1).point, p2));
             }
         }
         shapeRenderer.setColor(Color.WHITE);
 
         final float r = 0.05f;
         final float d = 2f * r;
-        points.forEach(p -> shapeRenderer.box(p.x - r, p.y - r, p.z + r, d, d, d));
+//        points.forEach(p -> shapeRenderer.box(p.x - r, p.y - r, p.z + r, d, d, d));
 
         if (isCursorOver)
             shapeRenderer.box(point.x - r, point.y - r, point.z - r, d, d, d);
@@ -109,29 +114,48 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         if (isCursorOver) {
             final Vector3 cpy = point.cpy();
-            points.add(cpy);
-            listener.pointAdded(cpy);
-            PlaneUtils.toSubSpace(plane, cpy, hitPoint2D);
-            vertices.add(hitPoint2D.x);
-            vertices.add(hitPoint2D.y);
             if (points.size > 1 && cpy.epsilonEquals(points.get(0), 0.001f)) {
                 closePath();
+            } else {
+                points.add(cpy);
+                listener.pointAdded(cpy);
+                PlaneUtils.toSubSpace(plane, cpy, hitPoint2D);
+                sketch2D.addPoint(hitPoint2D.cpy());
             }
         }
         return isCursorOver;
     }
 
     private void closePath() {
-        if (vertices.size < 6) return;
-        Logger.d("closing path: polygon has " + (vertices.size / 2) + " vertices");
+        if (points.size < 3) {
+            points.clear();
+            sketch2D.clear();
+            return;
+        }
         builder.begin();
         final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
-        builder.polygonExtruded(vertices, plane, 0.5f);
-        vertices.clear();
-        points.clear();
+        final List<List<Vector2>> loops = sketch2D.getLoops();
+        boolean valid = false;
+        final FloatArray vertices = new FloatArray();
+        for (List<Vector2> loop : loops) {
+            Logger.d("loop has " + loop.size() + " vertices");
+            vertices.clear();
+            for (Vector2 v : loop) {
+                vertices.add(v.x);
+                vertices.add(v.y);
+            }
+            if (vertices.size >= 6) {
+                builder.polygonExtruded(vertices, plane, 0.5f);
+                valid = true;
+            }
+        }
         builder.end();
-        final SketchNode node = new SketchNode(meshPart);
-        project.add(node, true);
+        points.clear();
+        sketch2D.clear();
+        if (valid) {
+            final SketchNode node = new SketchNode(meshPart);
+            project.add(node, true);
+        }
     }
 
     @Override
