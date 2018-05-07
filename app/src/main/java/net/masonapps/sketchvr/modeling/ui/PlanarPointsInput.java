@@ -95,9 +95,9 @@ public class PlanarPointsInput extends ModelingInputProcessor {
         for (int i = 0; i < sketch2D.points.size(); i++) {
             if (i == sketch2D.points.size() - 1) {
                 if (isCursorOver)
-                    shapeRenderer.line(PlaneUtils.toSpace(plane, sketch2D.points.get(i).point, p1), point);
+                    shapeRenderer.line(PlaneUtils.toSpace(plane, sketch2D.points.get(i), p1), point);
             } else {
-                shapeRenderer.line(PlaneUtils.toSpace(plane, sketch2D.points.get(i).point, p1), PlaneUtils.toSpace(plane, sketch2D.points.get(i + 1).point, p2));
+                shapeRenderer.line(PlaneUtils.toSpace(plane, sketch2D.points.get(i), p1), PlaneUtils.toSpace(plane, sketch2D.points.get(i + 1), p2));
             }
         }
         shapeRenderer.setColor(Color.WHITE);
@@ -132,6 +132,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             sketch2D.clear();
             return;
         }
+        sketch2D.closePath();
         builder.begin();
         final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
         final List<List<Vector2>> loops = sketch2D.getLoops();
