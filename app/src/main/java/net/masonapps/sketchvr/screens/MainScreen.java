@@ -17,25 +17,17 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Interpolation;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Pools;
 import com.google.vr.sdk.controller.Controller;
 
 import net.masonapps.sketchvr.SolidModelingGame;
@@ -45,10 +37,8 @@ import net.masonapps.sketchvr.actions.ColorAction;
 import net.masonapps.sketchvr.actions.RemoveAction;
 import net.masonapps.sketchvr.actions.TransformAction;
 import net.masonapps.sketchvr.actions.UndoRedoCache;
+import net.masonapps.sketchvr.controller.ViewControlsVirtualStage;
 import net.masonapps.sketchvr.environment.Grid;
-import net.masonapps.sketchvr.math.Animator;
-import net.masonapps.sketchvr.math.RotationUtil;
-import net.masonapps.sketchvr.math.Side;
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
@@ -66,7 +56,6 @@ import net.masonapps.sketchvr.modeling.ui.ModelingInputProcessor;
 import net.masonapps.sketchvr.modeling.ui.MultiNodeSelector;
 import net.masonapps.sketchvr.modeling.ui.PlanarPointsInput;
 import net.masonapps.sketchvr.modeling.ui.SingleNodeSelector;
-import net.masonapps.sketchvr.modeling.ui.ViewControls;
 import net.masonapps.sketchvr.ui.ExportDialog;
 import net.masonapps.sketchvr.ui.GroupCompleteDialog;
 
@@ -84,9 +73,6 @@ import org.masonapps.libgdxgooglevr.utils.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.masonapps.sketchvr.screens.MainScreen.State.STATE_NONE;
-import static net.masonapps.sketchvr.screens.MainScreen.State.STATE_VIEW_TRANSFORM;
-
 /**
  * Created by Bob Mason on 12/20/2017.
  */
@@ -100,8 +86,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private final MainInterface mainInterface;
     private final UndoRedoCache undoRedoCache;
     private final ShapeRenderer shapeRenderer;
-    private final Animator rotationAnimator;
-    private final Animator positionAnimator;
     private final Entity gridEntity;
     private final TranslateWidget translateWidget;
     private final RotateWidget rotateWidget;
@@ -112,18 +96,9 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private final PlanarPointsInput pointInput;
     private final FreeDrawInput freeDrawInput;
     private TransformWidget3D transformUI;
-    private boolean isTouchPadClicked = false;
-    private Quaternion rotation = new Quaternion();
-    private Quaternion lastRotation = new Quaternion();
-    private Quaternion snappedRotation = new Quaternion();
-    private Vector3 projectPosition = new Vector3(0, -0.5f, -2);
-    private Vector3 position = new Vector3(projectPosition);
-    private Vector3 snappedPosition = new Vector3(projectPosition);
-    private Vector3 center = new Vector3();
     private float projectScale = 1f;
     private String projectName;
     private final SketchMeshBuilder sketchMeshBuilder;
-    private State currentState = STATE_NONE;
     @Nullable
     private SketchNode focusedNode = null;
     @Nullable
@@ -144,9 +119,8 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private AddNodeInput addNodeInput;
     private SingleNodeSelector singleNodeSelector;
     private MultiNodeSelector multiNodeSelector;
-    //    private ViewAction viewAction = ACTION_NONE;
-    private InputMode currentInputMode = InputMode.VIEW;
     private VrInputMultiplexer inputMultiplexer;
+    private ViewControlsVirtualStage buttonControls;
 
     public MainScreen(SolidModelingGame game, String projectName) {
         this(game, projectName, new ArrayList<>());
@@ -202,45 +176,10 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
         transformUI = translateWidget;
 
-        rotationAnimator = new Animator(new Animator.AnimationListener() {
-            @Override
-            public void apply(float value) {
-                final Quaternion rot = project.getRotation();
-                rot.set(rotation).slerp(snappedRotation, value);
-                lastRotation.set(rot);
-                project.invalidate();
-                transformUI.setTransform(project.getTransform());
-            }
-
-            @Override
-            public void finished() {
-                rotation.set(snappedRotation);
-                lastRotation.set(rotation);
-            }
-        });
-        rotationAnimator.setInterpolation(Interpolation.linear);
-
-        positionAnimator = new Animator(new Animator.AnimationListener() {
-            @Override
-            public void apply(float value) {
-                project.getPosition().set(position).slerp(snappedPosition, value);
-                project.invalidate();
-                transformUI.setTransform(project.getTransform());
-            }
-
-            @Override
-            public void finished() {
-                position.set(snappedPosition);
-            }
-        });
-        positionAnimator.setInterpolation(Interpolation.linear);
-
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
         final SpriteBatch spriteBatch = new SpriteBatch();
         manageDisposable(shapeRenderer, spriteBatch);
-
-        project.setPosition(projectPosition);
 
 
         addNodeInput = new AddNodeInput(project, node -> Logger.d("node added"));
@@ -339,36 +278,38 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         mainInterface = new MainInterface(spriteBatch, skin, uiEventListener);
         mainInterface.loadWindowPositions(PreferenceManager.getDefaultSharedPreferences(GdxVr.app.getContext()));
 
+        buttonControls = new ViewControlsVirtualStage(project, spriteBatch, skin, 0.75f, transform -> transformUI.setTransform(transform));
 
-        final float sliderVal = 1f - (float) Math.sqrt((-projectPosition.z - MIN_Z) / (MAX_Z - MIN_Z));
-        mainInterface.getViewControls().getZoomSlider().setValue(sliderVal);
-        mainInterface.getViewControls().setListener(new ViewControls.ViewControlListener() {
-            @Override
-            public void onViewSelected(Side side) {
-                RotationUtil.rotateToViewSide(snappedRotation, side);
-                final Quaternion rotDiff = Pools.obtain(Quaternion.class);
-                rotDiff.set(rotation).conjugate().mulLeft(snappedRotation);
-                final float angleRad = rotDiff.getAngleRad();
-                final float duration = Math.abs(angleRad < MathUtils.PI ? angleRad : MathUtils.PI2 - angleRad) / MathUtils.PI;
-                Pools.free(rotDiff);
-                rotationAnimator.setDuration(duration);
-                rotationAnimator.start();
-            }
-
-            @Override
-            public void onZoomChanged(float value) {
-                final float z = -MathUtils.lerp(MIN_Z, MAX_Z, (1f - value) * (1f - value));
-                projectPosition.z = z;
-                if (selectedNode != null) {
-                    center.set(selectedNode.getPosition());
-                } else {
-                    center.set(0, 0, 0);
-                }
-                snappedPosition.set(center).scl(-1).mul(rotation).add(projectPosition);
-                position.set(snappedPosition);
-                project.setPosition(position);
-            }
-        });
+        // TODO: 5/9/2018 move to new view controls 
+//        final float sliderVal = 1f - (float) Math.sqrt((-projectPosition.z - MIN_Z) / (MAX_Z - MIN_Z));
+//        mainInterface.getViewControls().getZoomSlider().setValue(sliderVal);
+//        mainInterface.getViewControls().setListener(new ViewControls.ViewControlListener() {
+//            @Override
+//            public void onViewSelected(Side side) {
+//                RotationUtil.rotateToViewSide(snappedRotation, side);
+//                final Quaternion rotDiff = Pools.obtain(Quaternion.class);
+//                rotDiff.set(rotation).conjugate().mulLeft(snappedRotation);
+//                final float angleRad = rotDiff.getAngleRad();
+//                final float duration = Math.abs(angleRad < MathUtils.PI ? angleRad : MathUtils.PI2 - angleRad) / MathUtils.PI;
+//                Pools.free(rotDiff);
+//                rotationAnimator.setDuration(duration);
+//                rotationAnimator.start();
+//            }
+//
+//            @Override
+//            public void onZoomChanged(float value) {
+//                final float z = -MathUtils.lerp(MIN_Z, MAX_Z, (1f - value) * (1f - value));
+//                projectPosition.z = z;
+//                if (selectedNode != null) {
+//                    center.set(selectedNode.getPosition());
+//                } else {
+//                    center.set(0, 0, 0);
+//                }
+//                snappedPosition.set(center).scl(-1).mul(rotation).add(projectPosition);
+//                position.set(snappedPosition);
+//                project.setPosition(position);
+//            }
+//        });
 
         groupDialog = new GroupCompleteDialog(spriteBatch, skin, new GroupCompleteDialog.GroupDialogListener() {
             @Override
@@ -429,19 +370,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         );
     }
 
-    private static Model createGridBox(ModelBuilder builder, Skin skin, float radius) {
-        final Material material = new Material(TextureAttribute.createDiffuse(skin.getRegion(Style.Drawables.grid)), ColorAttribute.createDiffuse(Color.GRAY), FloatAttribute.createAlphaTest(0.5f), IntAttribute.createCullFace(GL20.GL_FRONT), new BlendingAttribute(true, 1f));
-        return builder.createBox(radius * 2f, radius * 2f, radius * 2f, material, VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates
-        );
-    }
-
-    private static Model createBoxModel(ModelBuilder builder, Color color, BoundingBox bounds) {
-        builder.begin();
-        final MeshPartBuilder part = builder.part("s", GL20.GL_LINES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal, new Material(ColorAttribute.createDiffuse(color), new BlendingAttribute(true, 0.5f)));
-        BoxShapeBuilder.build(part, bounds);
-        return builder.end();
-    }
-
     private static void drawBounds(ShapeRenderer shapeRenderer, BoundingBox bounds) {
         shapeRenderer.box(bounds.min.x, bounds.min.y, bounds.max.z,
                 bounds.getWidth(), bounds.getHeight(), bounds.getDepth());
@@ -451,20 +379,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         project.add(node, true);
         setSelectedNode(node);
         undoRedoCache.save(new AddAction(node, project));
-    }
-
-    protected void drawEntityBounds(ShapeRenderer shapeRenderer, SketchNode entity, Color color) {
-        shapeRenderer.setColor(color);
-        shapeRenderer.setTransformMatrix(project.getTransform());
-        final BoundingBox bounds = entity.getAABB();
-        drawBounds(shapeRenderer, bounds);
-    }
-
-    protected void drawSelectionBox(ShapeRenderer shapeRenderer, Color color) {
-        if (!selectionBox.isValid()) return;
-        shapeRenderer.setColor(color);
-        shapeRenderer.setTransformMatrix(project.getTransform());
-        drawBounds(shapeRenderer, selectionBox);
     }
 
     protected void setEditMode(EditModeTable.EditMode mode) {
@@ -549,7 +463,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         GdxVr.input.addDaydreamControllerListener(inputProcessorChooser);
         getVrCamera().position.set(0, 0f, 0);
         getVrCamera().lookAt(0, 0, -1);
-//        buttonControls.attachListener();
+        buttonControls.attachListener();
     }
 
     @Override
@@ -557,7 +471,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         super.hide();
         GdxVr.input.setInputProcessor(null);
         GdxVr.input.removeDaydreamControllerListener(inputProcessorChooser);
-//        buttonControls.detachListener();
+        buttonControls.detachListener();
         final SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(GdxVr.app.getContext()).edit();
         mainInterface.saveWindowPositions(editor);
         editor.apply();
@@ -574,13 +488,9 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     public void update() {
         super.update();
         grabControls.update(hitPoint, project);
-        // TODO: 3/28/2018 remove 
-//        if (currentInputMode == InputMode.SELECT || currentInputMode == InputMode.MULTI_SELECT || currentInputMode == InputMode.EDIT)
-//            getSolidModelingGame().getCursor().position.set(hitPoint);
         mainInterface.act();
-        rotationAnimator.update(GdxVr.graphics.getDeltaTime());
-        positionAnimator.update(GdxVr.graphics.getDeltaTime());
 //        Logger.d(GdxVr.graphics.getFramesPerSecond() + "fps");
+        buttonControls.act();
     }
 
     @Nullable
@@ -593,17 +503,13 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         mainInterface.setEntity(selectedNode);
 
         if (selectedNode != null) {
-//            center.set(selectedNode.getPosition());
-
+            // TODO: 5/9/2018 possibly center view on selected node or group 
             final Color diffuseColor = selectedNode.getDiffuseColor();
             if (diffuseColor != null)
                 mainInterface.getColorPicker().setColor(diffuseColor);
         } else {
             transformUI.setVisible(false);
         }
-//        snappedPosition.set(center).scl(-1).mul(rotation).add(projectPosition);
-//        positionAnimator.setDuration(0.5f);
-//        positionAnimator.start();
     }
 
     @Override
@@ -635,23 +541,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         shapeRenderer.end();
 
         mainInterface.draw(camera);
-    }
-
-    private void rotate() {
-        final Quaternion rotDiff = Pools.obtain(Quaternion.class);
-        rotDiff.set(lastRotation).conjugate().mulLeft(GdxVr.input.getControllerOrientation());
-//        RotationUtil.snapAxisAngle(rotDiff);
-//        Logger.d("rotDiff " + rotDiff);
-
-        rotation.mulLeft(rotDiff);
-        project.setRotation(rotation);
-        position.set(center).scl(-1).mul(rotation).add(projectPosition);
-        project.setPosition(position);
-//        gridEntity.setPosition(project.getPosition());
-//        gridEntity.setRotation(project.getRotation());
-        lastRotation.set(GdxVr.input.getControllerOrientation());
-        Pools.free(rotDiff);
-        transformUI.setTransform(project.getTransform());
+        buttonControls.draw(camera);
     }
 
     @Override
@@ -668,10 +558,13 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             if (!(activeProcessor instanceof SingleNodeSelector)) {
                 inputProcessorChooser.setActiveProcessor(singleNodeSelector);
             } else {
-                getSolidModelingGame().closeModelingScreen();
-                getSolidModelingGame().switchToStartupScreen();
+                toggleViewControls();
             }
         }
+    }
+
+    private void toggleViewControls() {
+        // TODO: 5/9/2018 show/hide button view controls 
     }
 
     @Override
@@ -686,26 +579,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
     @Override
     public void onDaydreamControllerUpdate(Controller controller, int connectionState) {
-        updateCurrentInputMode();
-        if (currentState == STATE_VIEW_TRANSFORM) {
-            getSolidModelingGame().setCursorVisible(false);
-            mainInterface.setVisible(false);
-            rotate();
-        } else {
-            getSolidModelingGame().setCursorVisible(true);
-        }
-
-        if (controller.clickButtonState) {
-            if (!isTouchPadClicked) {
-                onTouchPadButtonDown();
-                isTouchPadClicked = true;
-            }
-        } else {
-            if (isTouchPadClicked) {
-                onTouchPadButtonUp();
-                isTouchPadClicked = false;
-            }
-        }
     }
 
     @Override
@@ -714,132 +587,9 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
     @Override
     public void onControllerTouchPadEvent(Controller controller, DaydreamTouchEvent event) {
-        switch (event.action) {
-            case DaydreamTouchEvent.ACTION_DOWN:
-                vec2.set(event.x - 0.5f, event.y - 0.5f);
-                break;
-            case DaydreamTouchEvent.ACTION_MOVE:
-                final float dx = event.x - 0.5f - vec2.x;
-                final float dy = event.y - 0.5f - vec2.y;
-                final float min = 0.5f * 0.5f;
-                final float dx2 = dx * dx;
-                final float dy2 = dy * dy;
-                // TODO: 3/28/2018 remove 
-//                if (currentState == STATE_NONE && dx2 + dy2 > min) {
-                if (dx2 + dy2 > min) {
-                    cameraPosition.set(getVrCamera().position);
-                    final Vector3 vec = new Vector3();
-                    if (dx2 > dy2) {
-//                        getVrCamera().direction.rotate(getVrCamera().up, -dx * 45f * GdxVr.graphics.getDeltaTime()).nor();
-                        vec.set(getRightVector());
-                        vec.y = 0;
-                        vec.nor();
-                        vec.scl(dx * 2f * GdxVr.graphics.getDeltaTime());
-                        vec.add(cameraPosition);
-                        runOnGLThread(() -> {
-                            getVrCamera().position.set(vec);
-                            updateInterfacePosition();
-                        });
-                    } else {
-                        vec.set(getForwardVector());
-                        vec.y = 0;
-                        vec.nor();
-                        vec.scl(-dy * 2f * GdxVr.graphics.getDeltaTime());
-                        vec.add(cameraPosition);
-                        runOnGLThread(() -> {
-                            getVrCamera().position.set(vec);
-                            updateInterfacePosition();
-                        });
-                    }
-                }
-                break;
-            case DaydreamTouchEvent.ACTION_UP:
-                break;
-        }
-    }
-
-    private void onTouchPadButtonDown() {
-        switch (currentInputMode) {
-            case UI:
-                currentState = STATE_NONE;
-                break;
-            case VIEW:
-                lastRotation.set(GdxVr.input.getControllerOrientation());
-                currentState = STATE_VIEW_TRANSFORM;
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void onTouchPadButtonUp() {
-        switch (currentState) {
-            case STATE_NONE:
-                if (grabControls.isTransforming()) {
-                    grabControls.end();
-                    gridEntity.setVisible(false);
-                }
-                break;
-            case STATE_VIEW_TRANSFORM:
-                if (RotationUtil.snap(rotation, snappedRotation, 0.1f)) {
-                    final Quaternion rotDiff = Pools.obtain(Quaternion.class);
-                    rotDiff.set(rotation).conjugate().mulLeft(snappedRotation);
-                    final float angleRad = rotDiff.getAngleRad();
-                    final float duration = Math.abs(angleRad < MathUtils.PI ? angleRad : MathUtils.PI2 - angleRad) / MathUtils.PI;
-                    Pools.free(rotDiff);
-                    rotationAnimator.setDuration(duration);
-                    rotationAnimator.start();
-
-                    snappedPosition.set(center).scl(-1).mul(snappedRotation).add(projectPosition);
-                    positionAnimator.setDuration(duration);
-                    positionAnimator.start();
-                }
-//                final float len = getVrCamera().position.len();
-//                RotationUtil.setToClosestUnitVector(getVrCamera().position).scl(len);
-//                RotationUtil.setToClosestUnitVector(getVrCamera().up);
-//                getVrCamera().lookAt(Vector3.Zero);
-                break;
-            default:
-                break;
-        }
-        currentState = STATE_NONE;
-        mainInterface.setAlpha(1f);
-        mainInterface.setVisible(true);
-    }
-
-    private void updateCurrentInputMode() {
-        focusedNode = null;
-        switch (currentState) {
-            case STATE_NONE:
-                if (inputMultiplexer.isCursorOver())
-                    currentInputMode = InputMode.UI;
-                else
-                    currentInputMode = InputMode.VIEW;
-                break;
-            case STATE_VIEW_TRANSFORM:
-                currentInputMode = InputMode.VIEW;
-                break;
-        }
     }
 
     public SketchProjectEntity getProject() {
         return project;
-    }
-
-    public SketchMeshBuilder getSketchMeshBuilder() {
-        return sketchMeshBuilder;
-    }
-
-    // TODO: 3/28/2018 remove 
-//    enum ViewAction {
-//        ACTION_NONE, ROTATE, PAN, ZOOM
-//    }
-//
-    enum InputMode {
-        UI, VIEW
-    }
-
-    enum State {
-        STATE_VIEW_TRANSFORM, STATE_NONE
     }
 }

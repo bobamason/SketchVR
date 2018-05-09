@@ -17,7 +17,9 @@ import java.util.List;
  */
 public class Sketch2D {
 
+    private static final float EPSILON = 1e-3f;
     public List<Vector2> points = new ArrayList<>();
+    public List<Vector2> tmpPoints = new ArrayList<>();
     private Graph<Vector2, DefaultEdge> graph = new SimpleGraph<>(DefaultEdge.class);
 
     public void addPoint(Vector2 point) {
@@ -28,7 +30,7 @@ public class Sketch2D {
         if (index > 0) {
             graph.addEdge(points.get(index - 1), vertex);
         }
-//        checkSelfIntersection();
+        checkSelfIntersection();
     }
 
     private void checkSelfIntersection() {
@@ -37,12 +39,38 @@ public class Sketch2D {
             final int lastSegmentStart = points.size() - 2;
             final int lastSegmentEnd = points.size() - 1;
             Logger.d("lastSegmentStart = " + lastSegmentStart);
-            Vector2 p1 = points.get(lastSegmentStart);
-            Vector2 p2 = points.get(lastSegmentEnd);
-            for (int i = 1; i < lastSegmentStart; i++) {
-                if (Intersector.intersectSegments(points.get(i - 1), points.get(i), p1, p2, intersection)) {
-                    Logger.d("self intersection [" + points.get(i - 1) + ", " + points.get(i) + " | " + p1 + ", " + p2 + "] " + "[" + (i - 1) + ", " + i + " | " + lastSegmentStart + ", " + lastSegmentEnd + "] ");
-                    // TODO: 5/7/2018 insert vertex 
+            Vector2 segStart = points.get(lastSegmentStart);
+            Vector2 segEnd = points.get(lastSegmentEnd);
+            tmpPoints.clear();
+            for (int i = 0; i < lastSegmentStart; i++) {
+                tmpPoints.add(i, points.get(i));
+            }
+            for (int i = 1; i < tmpPoints.size(); i++) {
+                final Vector2 p1 = points.get(i - 1);
+                final Vector2 p2 = points.get(i);
+                if (Intersector.intersectSegments(p1, p2, segStart, segEnd, intersection)) {
+                    Logger.d("self intersection [" + p1 + ", " + p2 + " | " + segStart + ", " + segEnd + "] " + "[" + (i - 1) + ", " + i + " | " + lastSegmentStart + ", " + lastSegmentEnd + "] ");
+
+                    if (intersection.epsilonEquals(segStart, EPSILON)) {
+                        graph.addEdge(p1, segStart);
+                        graph.addEdge(segStart, p2);
+                    } else if (intersection.epsilonEquals(segEnd, EPSILON)) {
+                        graph.addEdge(p1, segEnd);
+                        graph.addEdge(segEnd, p2);
+                    } else if (intersection.epsilonEquals(p1, EPSILON)) {
+                        graph.addEdge(segStart, p1);
+                        graph.addEdge(p1, segEnd);
+                    } else if (intersection.epsilonEquals(p2, EPSILON)) {
+                        graph.addEdge(segStart, p2);
+                        graph.addEdge(p2, segEnd);
+                    } else {
+                        final Vector2 v = intersection.cpy();
+                        points.add(i, v);
+                        graph.addEdge(p1, v);
+                        graph.addEdge(v, p2);
+                        graph.addEdge(segStart, v);
+                        graph.addEdge(v, segEnd);
+                    }
                 }
             }
         }
