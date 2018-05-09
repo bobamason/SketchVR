@@ -37,7 +37,7 @@ public class VirtualStage extends Stage implements VrInputProcessor {
     private static boolean debug = true;
     // call invalidate() after making changes for them to take effect
     //position at center
-    private final Vector3 position = new Vector3();
+    protected final Vector3 position = new Vector3();
     //translation of batch transformation matrix
     protected final Vector3 translation = new Vector3();
     protected final Quaternion rotation = new Quaternion();
