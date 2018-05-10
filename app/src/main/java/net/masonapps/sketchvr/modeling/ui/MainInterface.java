@@ -16,7 +16,7 @@ import com.badlogic.gdx.utils.Pools;
 import net.masonapps.sketchvr.R;
 import net.masonapps.sketchvr.Style;
 import net.masonapps.sketchvr.modeling.SketchNode;
-import net.masonapps.sketchvr.ui.ColorPickerSimple;
+import net.masonapps.sketchvr.ui.ColorPickerRound;
 import net.masonapps.sketchvr.ui.ColorPickerWindow;
 import net.masonapps.sketchvr.ui.ConfirmDialog;
 import net.masonapps.sketchvr.ui.VerticalImageTextButton;
@@ -171,6 +171,7 @@ public class MainInterface extends CylindricalWindowUiContainer {
 
     public void setEditMode(EditModeTable.EditMode editMode) {
         currentEditMode = editMode;
+        colorPicker.setVisible(currentEditMode == EditModeTable.EditMode.COLOR);
     }
 
     private void initConfirmDialog() {
@@ -178,6 +179,12 @@ public class MainInterface extends CylindricalWindowUiContainer {
         confirmDialog.setBackground(skin.newDrawable(Style.Drawables.window, Style.COLOR_WINDOW));
         confirmDialog.setPosition(new CylindricalCoordinate(getRadius(), 90f, 0f, CylindricalCoordinate.AngleMode.degrees).toCartesian());
         addProcessor(confirmDialog);
+    }
+
+    private void initColorPicker() {
+        colorPicker.setVisible(false);
+        colorPicker.setPosition(new CylindricalCoordinate(getRadius(), 90f, 0f, CylindricalCoordinate.AngleMode.degrees).toCartesian());
+        addProcessor(colorPicker);
     }
 
     private void showConfirmDialog(String msg, Consumer<Boolean> consumer) {
@@ -214,7 +221,7 @@ public class MainInterface extends CylindricalWindowUiContainer {
         Pools.free(tmp);
     }
 
-    public ColorPickerSimple getColorPicker() {
+    public ColorPickerRound getColorPicker() {
         return colorPicker.getColorPicker();
     }
 

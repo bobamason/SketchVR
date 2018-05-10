@@ -13,16 +13,16 @@ import org.masonapps.libgdxgooglevr.ui.WindowVR;
 
 public class ColorPickerWindow extends WindowTableVR {
 
-    private final ColorPickerSimple colorPicker;
+    private final ColorPickerRound colorPicker;
 
     public ColorPickerWindow(Batch batch, Skin skin, int width, int height, String title, WindowVR.WindowVrStyle windowStyle) {
         super(batch, skin, width, height, title, windowStyle);
-        colorPicker = new ColorPickerSimple(skin, width, height);
+        colorPicker = new ColorPickerRound(skin, width, height);
         table.add(colorPicker);
         resizeToFitTable();
     }
 
-    public ColorPickerSimple getColorPicker() {
+    public ColorPickerRound getColorPicker() {
         return colorPicker;
     }
 
