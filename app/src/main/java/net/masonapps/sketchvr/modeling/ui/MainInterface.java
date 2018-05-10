@@ -11,17 +11,20 @@ import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Pools;
 
 import net.masonapps.sketchvr.R;
 import net.masonapps.sketchvr.Style;
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.ui.ColorPickerSimple;
+import net.masonapps.sketchvr.ui.ColorPickerWindow;
 import net.masonapps.sketchvr.ui.ConfirmDialog;
 import net.masonapps.sketchvr.ui.VerticalImageTextButton;
 
 import org.masonapps.libgdxgooglevr.math.CylindricalCoordinate;
 import org.masonapps.libgdxgooglevr.ui.CylindricalWindowUiContainer;
 import org.masonapps.libgdxgooglevr.ui.WindowTableVR;
+import org.masonapps.libgdxgooglevr.ui.WindowVR;
 
 import java.util.function.Consumer;
 
@@ -37,11 +40,9 @@ public class MainInterface extends CylindricalWindowUiContainer {
     private final Skin skin;
     private final UiEventListener eventListener;
     private final WindowTableVR mainTable;
-    private final ColorPickerSimple colorPicker;
+    private final ColorPickerWindow colorPicker;
     private final ConfirmDialog confirmDialog;
-    private final ViewControls viewControls;
-    private final Container<Table> container;
-    private final Table emptyTable;
+    //    private final ViewControls viewControls;
     private EditModeTable editModeTable;
     @Nullable
     private SketchNode entity = null;
@@ -51,20 +52,17 @@ public class MainInterface extends CylindricalWindowUiContainer {
         super(2f, 4f);
         this.skin = skin;
         this.eventListener = listener;
-//        final WindowVR.WindowVrStyle windowStyleWithClose = Style.createWindowVrStyle(skin);
-//        windowStyleWithClose.closeDrawable = skin.newDrawable(Style.Drawables.ic_close);
-        container = new Container<>();
-        emptyTable = new Table();
-        container.setActor(emptyTable);
+        final WindowVR.WindowVrStyle windowStyleWithClose = Style.createWindowVrStyle(skin);
+        windowStyleWithClose.closeDrawable = skin.newDrawable(Style.Drawables.ic_close);
         mainTable = new WindowTableVR(spriteBatch, skin, 200, 200, Style.createWindowVrStyle(skin));
-        colorPicker = new ColorPickerSimple(skin, 448, 448);
+        colorPicker = new ColorPickerWindow(spriteBatch, skin, 448, 448, Style.getStringResource(R.string.title_color_picker, "Color"), windowStyleWithClose);
         confirmDialog = new ConfirmDialog(spriteBatch, skin);
-        viewControls = new ViewControls(spriteBatch, skin, Style.createWindowVrStyle(skin));
+//        viewControls = new ViewControls(spriteBatch, skin, Style.createWindowVrStyle(skin));
         editModeTable = new EditModeTable(skin);
         editModeTable.setListener(this::editModeChanged);
         initMainTable();
         initConfirmDialog();
-        initViewControls();
+//        initViewControls();
     }
 
     private void initMainTable() {
@@ -156,13 +154,12 @@ public class MainInterface extends CylindricalWindowUiContainer {
         optionsTable.add(buttonBarTable).left().expandX().row();
         optionsTable.add(editModeTable).left().expandX();
         optionContainer.setActor(optionsTable);
-        mainTable.getTable().add(optionContainer).left().expand();
-        mainTable.getTable().add(container).expand();
+        mainTable.getTable().add(optionContainer).expand();
 
         final CylindricalCoordinate coordinate = new CylindricalCoordinate(getRadius(), 50f, 0.35f, CylindricalCoordinate.AngleMode.degrees);
         mainTable.setPosition(coordinate.toCartesian());
         mainTable.lookAt(new Vector3(0, coordinate.vertical, 0), Vector3.Y);
-        colorPicker.setColorListener(eventListener::onColorChanged);
+        colorPicker.getColorPicker().setColorListener(eventListener::onColorChanged);
         mainTable.resizeToFitTable();
         addProcessor(mainTable);
     }
@@ -174,28 +171,6 @@ public class MainInterface extends CylindricalWindowUiContainer {
 
     public void setEditMode(EditModeTable.EditMode editMode) {
         currentEditMode = editMode;
-        switch (currentEditMode) {
-            case NONE:
-                container.setActor(emptyTable);
-                break;
-            case TRANSLATE:
-                container.setActor(emptyTable);
-                break;
-            case ROTATE:
-                container.setActor(emptyTable);
-                break;
-            case SCALE:
-                container.setActor(emptyTable);
-                break;
-            case COLOR:
-                container.setActor(colorPicker);
-                break;
-        }
-        mainTable.resizeToFitTable();
-    }
-
-    public EditModeTable.EditMode getCurrentEditMode() {
-        return currentEditMode;
     }
 
     private void initConfirmDialog() {
@@ -211,13 +186,13 @@ public class MainInterface extends CylindricalWindowUiContainer {
         confirmDialog.show();
     }
 
-    private void initViewControls() {
-        final CylindricalCoordinate coordinate = new CylindricalCoordinate(getRadius(), 40f, -0.35f, CylindricalCoordinate.AngleMode.degrees);
-        viewControls.setPosition(coordinate.toCartesian());
-        viewControls.lookAt(new Vector3(0, coordinate.vertical, 0), Vector3.Y);
-//        viewControls.setVisible(false);
-        addProcessor(viewControls);
-    }
+//    private void initViewControls() {
+//        final CylindricalCoordinate coordinate = new CylindricalCoordinate(getRadius(), 40f, -0.35f, CylindricalCoordinate.AngleMode.degrees);
+//        viewControls.setPosition(coordinate.toCartesian());
+//        viewControls.lookAt(new Vector3(0, coordinate.vertical, 0), Vector3.Y);
+////        viewControls.setVisible(false);
+//        addProcessor(viewControls);
+//    }
 
     @Override
     public void act() {
@@ -226,26 +201,26 @@ public class MainInterface extends CylindricalWindowUiContainer {
 
     public void loadWindowPositions(SharedPreferences sharedPreferences) {
         //todo uncomment
-//        final Vector3 tmp = Pools.obtain(Vector3.class);
-//
-//        tmp.fromString(sharedPreferences.getString(WINDOW_MAIN, mainTable.getPosition().toString()));
-//        mainTable.setPosition(tmp);
-//        snapDragTableToCylinder(mainTable);
-//
+        final Vector3 tmp = Pools.obtain(Vector3.class);
+
+        tmp.fromString(sharedPreferences.getString(WINDOW_MAIN, mainTable.getPosition().toString()));
+        mainTable.setPosition(tmp);
+        snapDragTableToCylinder(mainTable);
+
 //        tmp.fromString(sharedPreferences.getString(WINDOW_VIEW_CONTROLS, viewControls.getPosition().toString()));
 //        viewControls.setPosition(tmp);
 //        snapDragTableToCylinder(viewControls);
-//
-//        Pools.free(tmp);
+
+        Pools.free(tmp);
     }
 
     public ColorPickerSimple getColorPicker() {
-        return colorPicker;
+        return colorPicker.getColorPicker();
     }
 
     public void saveWindowPositions(SharedPreferences.Editor editor) {
         editor.putString(WINDOW_MAIN, mainTable.getPosition().toString());
-        editor.putString(WINDOW_VIEW_CONTROLS, viewControls.getPosition().toString());
+//        editor.putString(WINDOW_VIEW_CONTROLS, viewControls.getPosition().toString());
     }
 
     public boolean onControllerBackButtonClicked() {
@@ -256,9 +231,9 @@ public class MainInterface extends CylindricalWindowUiContainer {
         return false;
     }
 
-    public ViewControls getViewControls() {
-        return viewControls;
-    }
+//    public ViewControls getViewControls() {
+//        return viewControls;
+//    }
 
     public void setEntity(@Nullable SketchNode entity) {
         this.entity = entity;

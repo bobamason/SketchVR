@@ -20,7 +20,6 @@ import org.masonapps.libgdxgooglevr.GdxVr;
 import org.masonapps.libgdxgooglevr.input.DaydreamControllerHandler;
 import org.masonapps.libgdxgooglevr.input.DaydreamControllerInputListener;
 import org.masonapps.libgdxgooglevr.input.VrInputProcessor;
-import org.masonapps.libgdxgooglevr.utils.Logger;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -69,6 +68,7 @@ public class VrAndroidInput implements Input, View.OnKeyListener {
     private GridPoint2 touch = new GridPoint2(-1, -1);
     private GridPoint2 lastTouch = new GridPoint2(-1, -1);
     private int connectionState = Controller.ConnectionStates.CONNECTED;
+    private Vector3 headDirection = new Vector3();
 
     public VrAndroidInput(VrActivity.VrApplication application, WeakReference<Context> contextRef) {
 //        this.onscreenKeyboard = new AndroidOnscreenKeyboard(context, new Handler(), this);
@@ -581,7 +581,8 @@ public class VrAndroidInput implements Input, View.OnKeyListener {
     public void onDaydreamControllerUpdate() {
         if (connectionState == Controller.ConnectionStates.CONNECTED) {
             isControllerConnected = true;
-            armModel.updateHeadDirection(GdxVr.app.getVrApplicationAdapter().getVrCamera().direction);
+            headDirection.set(GdxVr.app.getVrApplicationAdapter().getVrCamera().direction).mul(GdxVr.app.getVrApplicationAdapter().getHeadQuaternion());
+            armModel.updateHeadDirection(headDirection);
             armModel.onControllerUpdate(controller);
             controllerOrientation.set(armModel.wristRotation);
             controllerPosition.set(armModel.pointerPosition);
@@ -589,11 +590,6 @@ public class VrAndroidInput implements Input, View.OnKeyListener {
             isControllerConnected = false;
         }
         processEvents();
-        try {
-            daydreamControllerHandler.process(controller, connectionState);
-        } catch (Exception e) {
-            Logger.e("", e);
-        }
     }
 
     private void postTouchEvent(int type, int x, int y) {

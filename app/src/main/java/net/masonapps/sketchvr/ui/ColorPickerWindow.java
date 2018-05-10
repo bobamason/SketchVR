@@ -26,12 +26,6 @@ public class ColorPickerWindow extends WindowTableVR {
         return colorPicker;
     }
 
-    @Override
-    public void dispose() {
-        super.dispose();
-        colorPicker.dispose();
-    }
-
     public void setColor(Color color) {
         colorPicker.setColor(color);
     }

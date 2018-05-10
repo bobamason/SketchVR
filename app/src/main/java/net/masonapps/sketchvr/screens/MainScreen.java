@@ -279,6 +279,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         mainInterface.loadWindowPositions(PreferenceManager.getDefaultSharedPreferences(GdxVr.app.getContext()));
 
         buttonControls = new ViewControlsVirtualStage(project, spriteBatch, skin, 0.75f, transform -> transformUI.setTransform(transform));
+        buttonControls.setVisible(false);
 
         // TODO: 5/9/2018 move to new view controls 
 //        final float sliderVal = 1f - (float) Math.sqrt((-projectPosition.z - MIN_Z) / (MAX_Z - MIN_Z));
@@ -564,7 +565,15 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     }
 
     private void toggleViewControls() {
-        // TODO: 5/9/2018 show/hide button view controls 
+        if (buttonControls.isVisible()) {
+            buttonControls.setVisible(false);
+            mainInterface.setVisible(true);
+            getSolidModelingGame().setCursorVisible(true);
+        } else {
+            buttonControls.setVisible(true);
+            mainInterface.setVisible(false);
+            getSolidModelingGame().setCursorVisible(false);
+        }
     }
 
     @Override
