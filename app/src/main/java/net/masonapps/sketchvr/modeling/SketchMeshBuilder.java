@@ -159,4 +159,28 @@ public class SketchMeshBuilder extends MeshBuilder {
                 rect(tmpVecs.get(i), tmpVecs.get(i + 1), tmpVecs.get(i + halfVerts + 1), tmpVecs.get(i + halfVerts));
         }
     }
+
+    public void extrude(FloatArray vertices, Plane plane, Plane plane2) {
+        if (vertices.size < 6) return;
+        tmpVecs.clear();
+        for (int i = 0; i < vertices.size; i += 2) {
+            v2Tmp.set(vertices.get(i), vertices.get(i + 1));
+            PlaneUtils.toSpace(plane, v2Tmp, vTmp);
+            tmpVecs.add(vTmp.cpy());
+        }
+        for (int i = 0; i < vertices.size; i += 2) {
+            v2Tmp.set(vertices.get(i), vertices.get(i + 1));
+            PlaneUtils.toSpace(plane2, v2Tmp, vTmp);
+            tmpVecs.add(vTmp.cpy());
+        }
+
+        final int halfVerts = tmpVecs.size / 2;
+        if (areVerticesClockwise(vertices.items, 0, vertices.size)) {
+            for (int i = 0; i < halfVerts - 1; i++)
+                rect(tmpVecs.get(i + halfVerts), tmpVecs.get(i + halfVerts + 1), tmpVecs.get(i + 1), tmpVecs.get(i));
+        } else {
+            for (int i = 0; i < halfVerts - 1; i++)
+                rect(tmpVecs.get(i), tmpVecs.get(i + 1), tmpVecs.get(i + halfVerts + 1), tmpVecs.get(i + halfVerts));
+        }
+    }
 }
