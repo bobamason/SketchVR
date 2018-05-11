@@ -160,7 +160,7 @@ public abstract class TransformWidget3D extends Transformable implements VrInput
     @CallSuper
     public void setEntity(@Nullable SketchNode entity, Transformable transformable) {
         this.entity = entity;
-        processors.forEach(processor -> processor.setTransformable(entity));
+        processors.forEach(processor -> processor.setSketchNode(entity));
         if (this.entity != null) {
             setPosition(transformable.getPosition());
             setRotation(transformable.getRotation());

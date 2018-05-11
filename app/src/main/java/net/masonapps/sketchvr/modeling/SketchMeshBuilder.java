@@ -15,11 +15,17 @@ import com.badlogic.gdx.utils.ShortArray;
 
 import org.masonapps.libgdxgooglevr.math.PlaneUtils;
 
+import java.util.List;
+
 /**
  * Created by Bob Mason on 5/3/2018.
  */
 public class SketchMeshBuilder extends MeshBuilder {
     private final static Vector3 vTmp = new Vector3();
+    private final static Vector3 dir = new Vector3();
+    private final static Vector3 dir2 = new Vector3();
+    private final static Plane plane1 = new Plane();
+    private final static Plane plane2 = new Plane();
     private final static Array<Vector3> tmpVecs = new Array<>();
     private final static Vector2 v2Tmp = new Vector2();
     private final static Vector3 normal = new Vector3();
@@ -163,6 +169,7 @@ public class SketchMeshBuilder extends MeshBuilder {
     public void extrude(FloatArray vertices, Plane plane, Plane plane2) {
         if (vertices.size < 6) return;
         tmpVecs.clear();
+
         for (int i = 0; i < vertices.size; i += 2) {
             v2Tmp.set(vertices.get(i), vertices.get(i + 1));
             PlaneUtils.toSpace(plane, v2Tmp, vTmp);
@@ -182,5 +189,24 @@ public class SketchMeshBuilder extends MeshBuilder {
             for (int i = 0; i < halfVerts - 1; i++)
                 rect(tmpVecs.get(i), tmpVecs.get(i + 1), tmpVecs.get(i + halfVerts + 1), tmpVecs.get(i + halfVerts));
         }
+    }
+
+    public void sweep(FloatArray polygon, List<Vector3> path) {
+        if (path.size() < 2 || polygon.size < 6) return;
+        dir.set(path.get(0)).sub(path.get(1)).nor();
+        plane1.set(path.get(0), dir);
+        polygon(polygon, plane1);
+        plane1.normal.scl(-1);
+        for (int i = 1; i < path.size() - 1; i++) {
+            dir.set(path.get(i)).sub(path.get(i - 1)).nor();
+            dir2.set(path.get(i + 1)).sub(path.get(i)).nor();
+            plane2.set(path.get(i), dir.add(dir2).scl(0.5f));
+            extrude(polygon, plane1, plane2);
+            plane1.set(plane2);
+        }
+        dir2.set(path.get(path.size() - 1)).sub(path.get(path.size() - 2)).nor();
+        plane2.set(path.get(path.size() - 1), dir2);
+        extrude(polygon, plane1, plane2);
+        polygon(polygon, plane2);
     }
 }

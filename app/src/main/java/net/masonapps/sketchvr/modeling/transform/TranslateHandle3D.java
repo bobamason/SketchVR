@@ -108,7 +108,7 @@ public class TranslateHandle3D extends DragHandle3D {
 
     @Override
     public boolean performRayTest(Ray ray) {
-        if (transformable == null) return false;
+        if (sketchNode == null) return false;
         if (!updated) recalculateTransform();
         if (isDragging()) {
             if (shouldSetPlane) {
@@ -126,9 +126,9 @@ public class TranslateHandle3D extends DragHandle3D {
     }
 
     private void handleDrag() {
-        if (transformable == null) return;
+        if (sketchNode == null) return;
         final Vector3 hitPoint = getHitPoint3D();
-        final Vector3 position = transformable.getPosition();
+        final Vector3 position = sketchNode.getPosition();
         position.set(startPosition);
         float value;
         switch (axis) {
@@ -146,13 +146,13 @@ public class TranslateHandle3D extends DragHandle3D {
                 break;
         }
         SnapUtil.snap(position, 0.01f);
-        transformable.invalidate();
+        sketchNode.invalidate();
     }
 
     @Override
     public void update() {
-        if (transformable != null)
-            setPosition(transformable.getPosition());
+        if (sketchNode != null)
+            setPosition(sketchNode.getPosition());
     }
 
     @Override
@@ -193,9 +193,9 @@ public class TranslateHandle3D extends DragHandle3D {
 
     @Override
     public boolean touchDown() {
-        if (transformable != null) {
+        if (sketchNode != null) {
             startHitPoint.set(getHitPoint3D());
-            startPosition.set(transformable.getPosition());
+            startPosition.set(sketchNode.getPosition());
         }
         return super.touchDown();
     }
@@ -207,10 +207,10 @@ public class TranslateHandle3D extends DragHandle3D {
     }
 
     @Override
-    public void setTransformable(@Nullable SketchNode transformable) {
-        super.setTransformable(transformable);
-        if (transformable != null) {
-            setPosition(transformable.getPosition());
+    public void setSketchNode(@Nullable SketchNode sketchNode) {
+        super.setSketchNode(sketchNode);
+        if (sketchNode != null) {
+            setPosition(sketchNode.getPosition());
         }
     }
 }

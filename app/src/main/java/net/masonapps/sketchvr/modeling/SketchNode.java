@@ -26,11 +26,18 @@ import net.masonapps.sketchvr.actions.TransformAction;
 import net.masonapps.sketchvr.io.Base64Utils;
 import net.masonapps.sketchvr.io.JsonUtils;
 import net.masonapps.sketchvr.mesh.MeshInfo;
+import net.masonapps.sketchvr.mesh.Triangle;
+import net.masonapps.sketchvr.mesh.Vertex;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.masonapps.libgdxgooglevr.gfx.AABBTree;
+
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Bob Mason on 2/9/2018.
@@ -66,6 +73,7 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     private Color diffuseColor = new Color(Color.GRAY);
     private Color specularColor = new Color(0x3f3f3fff);
     private float shininess = 8f;
+    private AABBTree meshAABBTree = new AABBTree();
 
     public SketchNode() {
         super();
@@ -73,13 +81,14 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     }
 
     public SketchNode(@NonNull MeshPart meshPart) {
-        this(meshPart, null);
+        this(meshPart, Color.GRAY);
     }
 
-    public SketchNode(@NonNull MeshPart meshPart, @Nullable Material material) {
+    public SketchNode(@NonNull MeshPart meshPart, Color color) {
         super();
-        parts.add(new NodePart(meshPart, material == null ? createDefaultMaterial() : material));
+        parts.add(new NodePart(meshPart, createDefaultMaterial(color)));
         recenter(meshPart);
+        buildMeshAABBTree(meshPart);
         invalidate();
         isGroup = false;
     }
@@ -112,6 +121,37 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
 //        meshPart.center.set(0, 0, 0);
 //        meshPart.mesh.updateVertices(0, new float[0]);
 //    }
+
+    private void buildMeshAABBTree(MeshPart meshPart) {
+//        usedIndices.clear();
+//        usedIndices.ensureCapacity(meshPart.size);
+        final int stride = meshPart.mesh.getVertexSize() / Float.BYTES;
+        final FloatBuffer verticesBuffer = meshPart.mesh.getVerticesBuffer();
+        final ShortBuffer indicesBuffer = meshPart.mesh.getIndicesBuffer();
+        verticesBuffer.position(0);
+        indicesBuffer.position(0);
+        final List<Vertex> vertexList = new ArrayList<>();
+        for (int i = meshPart.offset; i < meshPart.size + meshPart.offset; i++) {
+            final short index = indicesBuffer.get(i);
+            final int iv = index * stride;
+            if (usedIndices.contains(index))
+                continue;
+            final Vertex v = new Vertex();
+            v.position.x = verticesBuffer.get(iv);
+            v.position.y = verticesBuffer.get(iv + 1);
+            v.position.z = verticesBuffer.get(iv + 2);
+            vertexList.add(v);
+        }
+
+        indicesBuffer.position(0);
+        for (int i = meshPart.offset; i < meshPart.size + meshPart.offset; i += 3) {
+            final short i1 = indicesBuffer.get(i);
+            final short i2 = indicesBuffer.get(i + 1);
+            final short i3 = indicesBuffer.get(i + 2);
+            meshAABBTree.insert(new Triangle(vertexList.get(i1), vertexList.get(i2), vertexList.get(i3)));
+        }
+        usedIndices.clear();
+    }
 
     /**
      * only works when there is one mesh per node
@@ -180,7 +220,9 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         return isGroup;
     }
 
-    protected Material createDefaultMaterial() {
+    protected Material createDefaultMaterial(Color color) {
+        ambientColor.set(color);
+        diffuseColor.set(color);
         return new Material(ColorAttribute.createAmbient(ambientColor),
                 ColorAttribute.createDiffuse(diffuseColor),
                 ColorAttribute.createSpecular(specularColor),
@@ -224,25 +266,14 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         validate();
         // TODO: 4/27/2018 ray test shape or path
         boolean rayTest;
-//        intersection.normal.set(0, 0, 0);
         transformedRay.set(ray).mul(inverseTransform);
-//        if (isGroup || bvh == null)
-//            rayTest = Intersector.intersectRayBounds(transformedRay, bounds, intersection.hitPoint);
-//        else
-//            rayTest = bvh.closestIntersection(transformedRay, bvhIntersection);
-//        if (rayTest) {
-//            intersection.hitPoint.set(bvhIntersection.hitPoint).mul(getTransform());
-//            if (bvhIntersection.triangle != null)
-//                intersection.normal.set(bvhIntersection.triangle.plane.normal).mul(getRotation());
-//            else
-//                intersection.normal.set(Vector3.Y);
-//            intersection.object = this;
-//            intersection.t = ray.origin.dst(intersection.hitPoint);
-//        }
-        rayTest = Intersector.intersectRayBounds(transformedRay, bounds, intersection.hitPoint);
+        if (isGroup || meshAABBTree == null) {
+            rayTest = Intersector.intersectRayBounds(transformedRay, bounds, intersection.hitPoint);
+            intersection.object = this;
+        } else
+            rayTest = meshAABBTree.rayTest(transformedRay, intersection);
         if (rayTest) {
             intersection.hitPoint.mul(getTransform());
-            intersection.object = this;
             intersection.t = ray.origin.dst(intersection.hitPoint);
         }
         return rayTest;

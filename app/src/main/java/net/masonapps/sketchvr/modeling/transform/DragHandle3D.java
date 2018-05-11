@@ -25,7 +25,7 @@ public abstract class DragHandle3D extends Entity {
     private final Vector3 hitPoint = new Vector3();
     protected boolean dragging = false;
     @Nullable
-    protected SketchNode transformable = null;
+    protected SketchNode sketchNode = null;
     private boolean isCursorOver = false;
     private Matrix4 parentTransform = new Matrix4();
 
@@ -136,18 +136,18 @@ public abstract class DragHandle3D extends Entity {
     }
 
     public boolean touchDown() {
-        if (transformable == null) return false;
+        if (sketchNode == null) return false;
         dragging = true;
         return true;
     }
 
     public boolean touchUp() {
         dragging = false;
-        return transformable != null;
+        return sketchNode != null;
     }
 
-    public void setTransformable(@Nullable SketchNode transformable) {
-        this.transformable = transformable;
+    public void setSketchNode(@Nullable SketchNode sketchNode) {
+        this.sketchNode = sketchNode;
     }
 
     public enum Axis {

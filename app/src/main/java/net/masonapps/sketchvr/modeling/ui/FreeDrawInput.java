@@ -2,8 +2,6 @@ package net.masonapps.sketchvr.modeling.ui;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Plane;
@@ -87,7 +85,7 @@ public class FreeDrawInput extends ModelingInputProcessor {
         }
         builder.end();
         if (meshPart.size > 0) {
-            final SketchNode node = new SketchNode(meshPart, new Material(ColorAttribute.createDiffuse(Color.GREEN), ColorAttribute.createAmbient(Color.GREEN)));
+            final SketchNode node = new SketchNode(meshPart);
             project.add(node, true);
         }
         stroke.clear();

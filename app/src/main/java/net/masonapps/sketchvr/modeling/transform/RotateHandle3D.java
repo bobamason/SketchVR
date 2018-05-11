@@ -100,7 +100,7 @@ public class RotateHandle3D extends DragHandle3D {
 
     @Override
     public boolean touchDown() {
-        if (transformable == null) return false;
+        if (sketchNode == null) return false;
         switch (axis) {
             case AXIS_X:
                 startAngle = calculateAngleX();
@@ -112,23 +112,23 @@ public class RotateHandle3D extends DragHandle3D {
                 startAngle = calculateAngleZ();
                 break;
         }
-        startRotation.set(transformable.getRotation());
+        startRotation.set(sketchNode.getRotation());
         return super.touchDown();
     }
 
     @Override
     public boolean performRayTest(Ray ray) {
-        if (transformable == null) return false;
+        if (sketchNode == null) return false;
         if (!updated) recalculateTransform();
         switch (axis) {
             case AXIS_X:
-                plane.set(transformable.getPosition(), tmpV.set(1, 0, 0));
+                plane.set(sketchNode.getPosition(), tmpV.set(1, 0, 0));
                 break;
             case AXIS_Y:
-                plane.set(transformable.getPosition(), tmpV.set(0, 1, 0));
+                plane.set(sketchNode.getPosition(), tmpV.set(0, 1, 0));
                 break;
             case AXIS_Z:
-                plane.set(transformable.getPosition(), tmpV.set(0, 0, 1));
+                plane.set(sketchNode.getPosition(), tmpV.set(0, 0, 1));
                 break;
         }
 
@@ -137,7 +137,7 @@ public class RotateHandle3D extends DragHandle3D {
                 angleChanged();
                 return true;
             } else {
-                final float dst = getHitPoint3D().dst(transformable.getPosition());
+                final float dst = getHitPoint3D().dst(sketchNode.getPosition());
                 if (dst > circleRadius - margin && dst < circleRadius + margin)
                     return true;
             }
@@ -146,8 +146,8 @@ public class RotateHandle3D extends DragHandle3D {
     }
 
     private void angleChanged() {
-        if (transformable == null) return;
-        final Quaternion rotation = transformable.getRotation();
+        if (sketchNode == null) return;
+        final Quaternion rotation = sketchNode.getRotation();
         switch (axis) {
             case AXIS_X:
                 angle = calculateAngleX();
@@ -166,32 +166,32 @@ public class RotateHandle3D extends DragHandle3D {
                 break;
         }
         Logger.d("axis = " + axis.name() + " angle = " + angle + " vec2 = " + vec2);
-        transformable.invalidate();
+        sketchNode.invalidate();
     }
 
     private float calculateAngleX() {
-        if (transformable != null)
-            PlaneUtils.toSubSpace(plane, tmpV.set(transformable.getPosition()).sub(getHitPoint3D()), vec2);
+        if (sketchNode != null)
+            PlaneUtils.toSubSpace(plane, tmpV.set(sketchNode.getPosition()).sub(getHitPoint3D()), vec2);
         return MathUtils.atan2(vec2.y, vec2.x) * MathUtils.radiansToDegrees;
     }
 
     private float calculateAngleY() {
-        if (transformable != null)
-            PlaneUtils.toSubSpace(plane, tmpV.set(transformable.getPosition()).sub(getHitPoint3D()), vec2);
+        if (sketchNode != null)
+            PlaneUtils.toSubSpace(plane, tmpV.set(sketchNode.getPosition()).sub(getHitPoint3D()), vec2);
         return -MathUtils.atan2(-vec2.y, vec2.x) * MathUtils.radiansToDegrees;
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
     private float calculateAngleZ() {
-        if (transformable != null)
-            PlaneUtils.toSubSpace(plane, tmpV.set(transformable.getPosition()).sub(getHitPoint3D()), vec2);
+        if (sketchNode != null)
+            PlaneUtils.toSubSpace(plane, tmpV.set(sketchNode.getPosition()).sub(getHitPoint3D()), vec2);
         return MathUtils.atan2(-vec2.x, vec2.y) * MathUtils.radiansToDegrees;
     }
 
     @Override
     public void update() {
-        if (transformable != null) {
-            setPosition(transformable.getPosition());
+        if (sketchNode != null) {
+            setPosition(sketchNode.getPosition());
 //            switch (axis) {
 //                case AXIS_X:
 //                    setRotation(0, angle, 0);
@@ -207,11 +207,11 @@ public class RotateHandle3D extends DragHandle3D {
     }
 
     @Override
-    public void setTransformable(@Nullable SketchNode transformable) {
-        super.setTransformable(transformable);
-        if (transformable != null) {
-            setPosition(transformable.getPosition());
-//            final Quaternion rotation = transformable.getRotation();
+    public void setSketchNode(@Nullable SketchNode sketchNode) {
+        super.setSketchNode(sketchNode);
+        if (sketchNode != null) {
+            setPosition(sketchNode.getPosition());
+//            final Quaternion rotation = sketchNode.getRotation();
 //            switch (axis) {
 //                case AXIS_X:
 //                    angle = rotation.getPitch();
