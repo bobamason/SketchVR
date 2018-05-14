@@ -66,6 +66,7 @@ public class Sketch2D {
                     } else {
                         final Vector2 v = intersection.cpy();
                         points.add(i, v);
+                        graph.addVertex(v);
                         graph.addEdge(p1, v);
                         graph.addEdge(v, p2);
                         graph.addEdge(segStart, v);

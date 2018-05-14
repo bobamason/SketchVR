@@ -603,14 +603,13 @@ public class VrActivity extends Activity {
         public void onUpdate() {
 //            app.postRunnable(this);
 
-            try {
-                GdxVr.input.getDaydreamControllerHandler().process(controller, connectionState);
-            } catch (Exception e) {
-                Logger.e("", e);
-            }
+//            try {
+//                GdxVr.input.getDaydreamControllerHandler().process(controller, connectionState);
+//            } catch (Exception e) {
+//                Logger.e("", e);
+//            }
         }
 
-        // Update the various TextViews in the UI thread.
         @Override
         public void run() {
             controller.update();

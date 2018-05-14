@@ -46,7 +46,8 @@ public class ColorPickerRound extends Group {
         setSize(width, height);
         colorCircle = new ColorCircle(skin.newDrawable(Style.Drawables.white));
 
-        brightnessSlider = new Slider(0f, 1f, 0.01f, true, skin);
+        // TODO: 5/13/2018 make slider vertical 
+        brightnessSlider = new Slider(0f, 1f, 0.01f, false, skin);
         brightnessSlider.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {

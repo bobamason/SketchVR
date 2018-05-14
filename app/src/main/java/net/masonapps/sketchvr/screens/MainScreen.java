@@ -542,7 +542,8 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         shapeRenderer.end();
 
         mainInterface.draw(camera);
-        buttonControls.draw(camera);
+        // TODO: 5/13/2018 uncomment 
+//        buttonControls.draw(camera);
     }
 
     @Override

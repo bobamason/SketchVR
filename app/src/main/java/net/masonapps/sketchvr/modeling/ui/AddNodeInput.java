@@ -12,7 +12,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Quaternion;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.google.vr.sdk.controller.Controller;
 
@@ -54,11 +53,9 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
         if (previewNode != null) {
 //            Logger.d("hit = " + String.valueOf(rayTest) + " normal = " + intersectionInfo.normal);
             if (rayTest) {
-                if (intersectionInfo.normal.isZero(0.001f))
-                    intersectionInfo.normal.set(Vector3.Y);
                 final float offset = previewNode.getBounds().getHeight() * previewNode.getScaleY() / 2f;
-                previewNode.getPosition().set(intersectionInfo.normal).scl(offset).add(intersectionInfo.hitPoint);
-                previewNode.getRotation().setFromCross(Vector3.Y, intersectionInfo.normal);
+                previewNode.getPosition().set(intersectionInfo.hitPoint);
+//                previewNode.getRotation().setFromCross(Vector3.Y, normal);
                 previewNode.invalidate();
             } else {
                 previewNode.getPosition().set(ray.direction).scl(distance).add(ray.origin);

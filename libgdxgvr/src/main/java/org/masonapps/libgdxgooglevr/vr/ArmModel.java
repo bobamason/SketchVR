@@ -37,7 +37,7 @@ public class ArmModel {
     public float fadeDistanceFromFace = 0.32f;
     public float tooltipMinDistanceFromFace = 0.45f;
     public int tooltipMaxAngleFromCamera = 80;
-    public GazeBehavior followGaze = GazeBehavior.DuringMotion;
+    public GazeBehavior followGaze = GazeBehavior.Never;
     public Vector3 pointerPosition = new Vector3();
     public Quaternion pointerRotation = new Quaternion();
     public Vector3 wristPosition = new Vector3();
