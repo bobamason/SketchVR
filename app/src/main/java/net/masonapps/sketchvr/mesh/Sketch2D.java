@@ -4,9 +4,9 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 
 import org.jgrapht.Graph;
-import org.jgrapht.alg.cycle.PatonCycleBase;
+import org.jgrapht.alg.cycle.TarjanSimpleCycles;
 import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.graph.SimpleGraph;
+import org.jgrapht.graph.SimpleDirectedGraph;
 import org.masonapps.libgdxgooglevr.utils.Logger;
 
 import java.util.ArrayList;
@@ -20,17 +20,27 @@ public class Sketch2D {
     private static final float EPSILON = 1e-3f;
     public List<Vector2> points = new ArrayList<>();
     public List<Vector2> tmpPoints = new ArrayList<>();
-    private Graph<Vector2, DefaultEdge> graph = new SimpleGraph<>(DefaultEdge.class);
+    private Graph<Vector2, DefaultEdge> graph = new SimpleDirectedGraph<>(DefaultEdge.class);
 
     public void addPoint(Vector2 point) {
         final int index = points.size();
-        final Vector2 vertex = point.cpy();
-        points.add(vertex);
-        graph.addVertex(vertex);
+        Vector2 vertex = getDuplicate(point);
+        if (vertex == null) {
+            vertex = point.cpy();
+            points.add(vertex);
+            graph.addVertex(vertex);
+        }
         if (index > 0) {
             graph.addEdge(points.get(index - 1), vertex);
         }
         checkSelfIntersection();
+    }
+
+    private Vector2 getDuplicate(Vector2 vertex) {
+        for (Vector2 point : points) {
+            if (point.epsilonEquals(vertex, EPSILON)) return point;
+        }
+        return null;
     }
 
     private void checkSelfIntersection() {
@@ -78,7 +88,7 @@ public class Sketch2D {
     }
 
     public List<List<Vector2>> getLoops() {
-        return new PatonCycleBase<>(graph).findCycleBase();
+        return new TarjanSimpleCycles<>(graph).findSimpleCycles();
     }
 
     public void clear() {

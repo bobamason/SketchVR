@@ -33,6 +33,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.masonapps.libgdxgooglevr.gfx.AABBTree;
+import org.masonapps.libgdxgooglevr.utils.Logger;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
@@ -274,6 +275,9 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
             rayTest = meshAABBTree.rayTest(transformedRay, intersection);
         if (rayTest) {
             intersection.hitPoint.mul(getTransform());
+            Logger.d("node ray test hitPoint = " + intersection.hitPoint);
+            if (intersection.object instanceof Triangle)
+                Logger.d("node ray test normal = " + ((Triangle) intersection.object).plane.normal);
             intersection.t = ray.origin.dst(intersection.hitPoint);
         }
         return rayTest;
