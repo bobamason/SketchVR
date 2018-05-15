@@ -20,9 +20,6 @@ import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.math.PlaneUtils;
-import org.masonapps.libgdxgooglevr.utils.Logger;
-
-import java.util.List;
 
 /**
  * Created by Bob Mason on 3/22/2018.
@@ -132,24 +129,38 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             sketch2D.clear();
             return;
         }
+        final FloatArray vertices = new FloatArray();
         sketch2D.closePath();
         builder.begin();
         final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
-        final List<List<Vector2>> loops = sketch2D.getLoops();
+
+//        final List<List<Vector2>> loops = sketch2D.getLoops();
         boolean valid = false;
-        final FloatArray vertices = new FloatArray();
-        for (List<Vector2> loop : loops) {
-            Logger.d("loop has " + loop.size() + " vertices");
-            vertices.clear();
-            for (Vector2 v : loop) {
-                vertices.add(v.x);
-                vertices.add(v.y);
-            }
-            if (vertices.size >= 6) {
-                builder.polygonExtruded(vertices, plane, 0.5f);
-                valid = true;
-            }
+//        for (List<Vector2> loop : loops) {
+//            Logger.d("loop has " + loop.size() + " vertices");
+//            vertices.clear();
+//            for (Vector2 v : loop) {
+//                vertices.add(v.x);
+//                vertices.add(v.y);
+//            }
+//            if (vertices.size >= 6) {
+//                builder.polygonExtruded(vertices, plane, 0.5f);
+//                valid = true;
+//            }
+//        }
+
+        // TODO: 5/15/2018 remove sweep test 
+        final Vector2 p = new Vector2();
+        final float sides = 6;
+        for (int i = 0; i < sides; i++) {
+            float a = i * (360f / sides);
+            p.set(0.1f, 0f).rotate(a);
+            vertices.add(p.x);
+            vertices.add(p.y);
         }
+        builder.sweep(vertices, points, true);
+        valid = true;
+        
         builder.end();
         points.clear();
         sketch2D.clear();

@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.ShortArray;
@@ -176,52 +177,111 @@ public class SketchMeshBuilder extends MeshBuilder {
         }
     }
 
-    public void extrude(FloatArray vertices, Plane plane, Plane plane2) {
-        if (vertices.size < 6) return;
-        tmpVecs.clear();
-
-        for (int i = 0; i < vertices.size; i += 2) {
-            p1.set(vertices.get(i), vertices.get(i + 1));
-            PlaneUtils.toSpace(plane, p1, vTmp);
-            tmpVecs.add(vTmp.cpy());
-        }
-        for (int i = 0; i < vertices.size; i += 2) {
-            p1.set(vertices.get(i), vertices.get(i + 1));
-            PlaneUtils.toSpace(plane2, p1, vTmp);
-            tmpVecs.add(vTmp.cpy());
-        }
-
-        final int halfVerts = tmpVecs.size / 2;
-        if (areVerticesClockwise(vertices.items, 0, vertices.size)) {
+    /**
+     * @param points    first half are start points, second half are end points
+     * @param clockwise direction of the polygon on the start of the extrude
+     */
+    public void extrude(Array<Vector3> points, boolean clockwise) {
+        final int halfVerts = points.size / 2;
+        if (clockwise) {
             for (int i = 0; i < halfVerts - 1; i++)
-                rect(tmpVecs.get(i + halfVerts), tmpVecs.get(i + halfVerts + 1), tmpVecs.get(i + 1), tmpVecs.get(i));
+                rect(points.get(i + halfVerts), points.get(i + halfVerts + 1), points.get(i + 1), points.get(i));
         } else {
             for (int i = 0; i < halfVerts - 1; i++)
-                rect(tmpVecs.get(i), tmpVecs.get(i + 1), tmpVecs.get(i + halfVerts + 1), tmpVecs.get(i + halfVerts));
+                rect(points.get(i), points.get(i + 1), points.get(i + halfVerts + 1), points.get(i + halfVerts));
         }
     }
 
-    public void sweep(FloatArray polygon, List<Vector3> path) {
-        if (path.size() < 2 || polygon.size < 6) return;
-        dir.set(path.get(0)).sub(path.get(1)).nor();
-        plane1.set(path.get(0), dir);
-        polygon(polygon, plane1);
-        plane1.normal.scl(-1);
-        for (int i = 1; i < path.size() - 1; i++) {
-            dir.set(path.get(i)).sub(path.get(i - 1)).nor();
-            dir2.set(path.get(i + 1)).sub(path.get(i)).nor();
-            plane2.set(path.get(i), dir.add(dir2).scl(0.5f));
-            extrude(polygon, plane1, plane2);
-            plane1.set(plane2);
+    public void sweep(FloatArray polygon, Array<Vector3> path, boolean continuous) {
+        final int n = path.size;
+        if (n < 2 || polygon.size < 6) return;
+        final Array<Ray> rays = new Array<>();
+        final Array<Vector3> start = new Array<>();
+        final Array<Vector3> end = new Array<>();
+        tmpVecs.clear();
+        final boolean capEnds = !continuous;
+        final boolean clockwise = areVerticesClockwise(polygon.items, 0, polygon.size);
+        if (capEnds) {
+            dir.set(path.get(0)).sub(path.get(1)).nor();
+            plane1.set(path.get(0), dir);
+            polygon(polygon, plane1);
+            plane1.normal.scl(-1);
+            for (int j = 0; j < polygon.size; j += 2) {
+                p1.set(polygon.get(j), polygon.get(j + 1));
+                PlaneUtils.toSpace(plane1, p1, vTmp);
+                start.add(vTmp.cpy());
+            }
+        } else {
+            dir.set(path.get(0)).sub(path.get(n - 1)).nor();
+            plane1.set(path.get(0), dir);
+            dir2.set(path.get(1)).sub(path.get(0)).nor();
+            plane2.set(path.get(1), dir.add(dir2).scl(0.5f));
+            for (int j = 0; j < polygon.size; j += 2) {
+                p1.set(polygon.get(j), polygon.get(j + 1));
+                PlaneUtils.toSpace(plane1, p1, vTmp);
+                rays.add(new Ray(vTmp, plane1.normal));
+            }
+
+            start.clear();
+            for (int j = 0; j < rays.size; j++) {
+                Intersector.intersectRayPlane(rays.get(j), plane2, vTmp);
+                start.add(vTmp.cpy());
+            }
         }
-        dir2.set(path.get(path.size() - 1)).sub(path.get(path.size() - 2)).nor();
-        plane2.set(path.get(path.size() - 1), dir2);
-        extrude(polygon, plane1, plane2);
-        polygon(polygon, plane2);
+        for (int i = 0; i < n; i++) {
+            if (capEnds)
+                if (i == 0 || i == n - 1)
+                    continue;
+            final int iPrev = (i - 1) % n;
+            final int iNext = (i + 1) % n;
+            final Vector3 prev = path.get(iPrev);
+            final Vector3 curr = path.get(i);
+            final Vector3 next = path.get(iNext);
+            // calculate rays to project onto current plane
+            dir.set(curr).sub(prev).nor();
+            plane1.set(prev, dir);
+            for (int j = 0; j < polygon.size; j += 2) {
+                p1.set(polygon.get(j), polygon.get(j + 1));
+                PlaneUtils.toSpace(plane1, p1, vTmp);
+                rays.add(new Ray(vTmp, plane1.normal));
+            }
+
+            dir2.set(next).sub(curr).nor();
+            plane2.set(next, dir.add(dir2).scl(0.5f));
+
+            end.clear();
+            for (int j = 0; j < rays.size; j++) {
+                Intersector.intersectRayPlane(rays.get(j), plane2, vTmp);
+                end.add(vTmp.cpy());
+            }
+            extrude(start, end, clockwise);
+            start.clear();
+            start.addAll(end);
+        }
+        if (capEnds) {
+            dir2.set(path.get(n - 1)).sub(path.get(n - 2)).nor();
+            plane2.set(path.get(n - 1), dir2);
+            polygon(polygon, plane2);
+            for (int j = 0; j < polygon.size; j += 2) {
+                p2.set(polygon.get(j), polygon.get(j + 1));
+                PlaneUtils.toSpace(plane2, p2, vTmp);
+                end.add(vTmp.cpy());
+            }
+
+            extrude(start, end, clockwise);
+        }
+    }
+
+    private void extrude(Array<Vector3> start, Array<Vector3> end, boolean clockwise) {
+        tmpVecs.clear();
+        tmpVecs.ensureCapacity(start.size + end.size);
+        tmpVecs.addAll(start);
+        tmpVecs.addAll(end);
+        extrude(tmpVecs, clockwise);
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
-    public void drawStrokePath(List<Vector2> path, Plane plane, float strokeWidth) {
+    public void drawStrokePath(List<Vector2> path, Plane plane, float strokeWidth, boolean continuous) {
         final int n = path.size();
         if (n < 2) return;
         topPath.clear();

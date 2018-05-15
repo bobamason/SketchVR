@@ -5,8 +5,11 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Plane;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.FloatArray;
 
 import net.masonapps.sketchvr.math.Segment;
 import net.masonapps.sketchvr.mesh.Stroke;
@@ -66,29 +69,33 @@ public class FreeDrawInput extends ModelingInputProcessor {
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         isDrawing = false;
         stroke.simplifyBySegmentLength(0.125f);
-        builder.begin();
-        final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
-        final int pointCount = stroke.getPointCount();
-        for (int i = 1; i < pointCount; i++) {
-            seg1.set(stroke.points.get(i - 1), stroke.points.get(i));
-            if (i == 1) {
-                tmpPlane.set(seg1.p1, seg1.direction);
-                // TODO: 5/2/2018 start cap 
-            } else if (i == pointCount - 1) {
-                tmpPlane.set(seg1.p1.x, seg1.p1.y, seg1.p1.z, -seg1.direction.x, -seg1.direction.y, -seg1.direction.z);
-                // TODO: 5/2/2018 end cap 
-            } else {
-                seg2.set(stroke.points.get(i), stroke.points.get(i + 1));
-                tmpPlane2.set(seg1.p1, seg1.direction);
-            }
+        if (stroke.getPointCount() > 2) {
+            final FloatArray vertices = new FloatArray();
 
-        }
-        builder.end();
-        if (meshPart.size > 0) {
+            builder.begin();
+
+            final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
+
+            final Vector2 p = new Vector2();
+            final float sides = 6;
+            for (int i = 0; i < sides; i++) {
+                float a = i * (360f / sides);
+                p.set(0.1f, 0f).rotate(a);
+                vertices.add(p.x);
+                vertices.add(p.y);
+            }
+            final Array<Vector3> points = new Array<>();
+            for (Vector3 point : stroke.points) {
+                points.add(point);
+            }
+            builder.sweep(vertices, points, false);
+
+            builder.end();
+
             final SketchNode node = new SketchNode(meshPart);
             project.add(node, true);
+            stroke.clear();
         }
-        stroke.clear();
         return true;
     }
 

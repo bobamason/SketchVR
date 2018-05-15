@@ -352,7 +352,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         pointInput = new PlanarPointsInput(project, point -> Logger.d("point added " + point));
         pointInput.getPlane().set(Vector3.Zero, Vector3.Z);
         singleNodeSelector = new SingleNodeSelector(project, this::setSelectedNode);
-        inputProcessorChooser.setActiveProcessor(pointInput);
+        inputProcessorChooser.setActiveProcessor(freeDrawInput);
 
         inputMultiplexer = new VrInputMultiplexer(mainInterface, inputProcessorChooser);
     }
