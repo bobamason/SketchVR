@@ -56,6 +56,7 @@ import net.masonapps.sketchvr.modeling.ui.ModelingInputProcessor;
 import net.masonapps.sketchvr.modeling.ui.MultiNodeSelector;
 import net.masonapps.sketchvr.modeling.ui.PlanarPointsInput;
 import net.masonapps.sketchvr.modeling.ui.SingleNodeSelector;
+import net.masonapps.sketchvr.modeling.ui.SphericalPointsInput;
 import net.masonapps.sketchvr.ui.ExportDialog;
 import net.masonapps.sketchvr.ui.GroupCompleteDialog;
 
@@ -95,6 +96,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private final ExportDialog exportDialog;
     private final PlanarPointsInput pointInput;
     private final FreeDrawInput freeDrawInput;
+    private final SphericalPointsInput spherePointsInput;
     private TransformWidget3D transformUI;
     private float projectScale = 1f;
     private String projectName;
@@ -349,10 +351,11 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
         // TODO: 3/23/2018 remove test 
         freeDrawInput = new FreeDrawInput(project);
+        spherePointsInput = new SphericalPointsInput(project);
         pointInput = new PlanarPointsInput(project, point -> Logger.d("point added " + point));
         pointInput.getPlane().set(Vector3.Zero, Vector3.Z);
         singleNodeSelector = new SingleNodeSelector(project, this::setSelectedNode);
-        inputProcessorChooser.setActiveProcessor(freeDrawInput);
+        inputProcessorChooser.setActiveProcessor(spherePointsInput);
 
         inputMultiplexer = new VrInputMultiplexer(mainInterface, inputProcessorChooser);
     }
@@ -550,17 +553,14 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     public void onControllerBackButtonClicked() {
         if (!mainInterface.onControllerBackButtonClicked()) {
             final VrInputProcessor activeProcessor = inputProcessorChooser.getActiveProcessor();
-            if (activeProcessor instanceof AddNodeInput) {
-                ((AddNodeInput) activeProcessor).setPreviewNode(null);
-            }
-            //todo end part on backpress
-//            if (activeProcessor instanceof OnBackClickedListener) {
-//                ((OnBackClickedListener) activeProcessor).onBackClicked();
-//            }
-            if (!(activeProcessor instanceof SingleNodeSelector)) {
-                inputProcessorChooser.setActiveProcessor(singleNodeSelector);
-            } else {
-                toggleViewControls();
+            if (activeProcessor instanceof ModelingInputProcessor) {
+                if (((ModelingInputProcessor) activeProcessor).onBackButtonClicked())
+                    return;
+                if (!(activeProcessor instanceof SingleNodeSelector)) {
+                    inputProcessorChooser.setActiveProcessor(singleNodeSelector);
+                } else {
+                    toggleViewControls();
+                }
             }
         }
     }
@@ -597,6 +597,10 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
     @Override
     public void onControllerTouchPadEvent(Controller controller, DaydreamTouchEvent event) {
+        final VrInputProcessor activeProcessor = inputProcessorChooser.getActiveProcessor();
+        if (activeProcessor instanceof FreeDrawInput) {
+            freeDrawInput.onControllerTouchPadEvent(event);
+        }
     }
 
     public SketchProjectEntity getProject() {

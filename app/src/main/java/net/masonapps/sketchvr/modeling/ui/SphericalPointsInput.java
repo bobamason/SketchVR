@@ -13,34 +13,33 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 
 import net.masonapps.sketchvr.math.Segment;
-import net.masonapps.sketchvr.mesh.Stroke;
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.input.DaydreamTouchEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Bob Mason on 3/19/2018.
  */
 
-public class FreeDrawInput extends ModelingInputProcessor {
+public class SphericalPointsInput extends ModelingInputProcessor {
 
     private static final float TOUCHPAD_SCALE = 400f;
     private final SketchMeshBuilder builder;
-    private float drawDistance = 3f;
-    private final Stroke stroke = new Stroke();
-    private final Vector3 tmpPoint = new Vector3();
-    private boolean isDrawing = false;
+    private final Vector3 point = new Vector3();
     private final Segment seg1 = new Segment();
     private final Segment seg2 = new Segment();
     private final Plane tmpPlane = new Plane();
     private final Plane tmpPlane2 = new Plane();
+    private float drawDistance = 3f;
     private GestureDetector gestureDetector;
+    private List<Vector3> points = new ArrayList<>();
 
-    public FreeDrawInput(SketchProjectEntity project) {
+    public SphericalPointsInput(SketchProjectEntity project) {
         super(project);
         this.builder = project.getBuilder();
         gestureDetector = new GestureDetector(new GestureDetector.GestureAdapter() {
@@ -57,17 +56,13 @@ public class FreeDrawInput extends ModelingInputProcessor {
     @Override
     public boolean performRayTest(Ray ray) {
         intersectionInfo.hitPoint.set(ray.origin).add(ray.direction).nor().scl(drawDistance);
-        if (isDrawing) {
-            stroke.addPoint(tmpPoint.set(intersectionInfo.hitPoint).mul(project.getInverseTransform()));
-        }
+        point.set(intersectionInfo.hitPoint).mul(project.getInverseTransform());
         return true;
     }
 
     @Override
     public void draw(ShapeRenderer shapeRenderer) {
-        if (!isDrawing) return;
         shapeRenderer.setColor(Color.GREEN);
-        final List<Vector3> points = stroke.points;
         for (int i = 0; i < points.size() - 1; i++) {
             shapeRenderer.line(points.get(i), points.get(i + 1));
         }
@@ -75,42 +70,50 @@ public class FreeDrawInput extends ModelingInputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        isDrawing = true;
+        points.add(point.cpy());
         return true;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        isDrawing = false;
-        stroke.simplifyBySegmentLength(0.125f);
-        if (stroke.getPointCount() > 2) {
-            final FloatArray vertices = new FloatArray();
-
-            builder.begin();
-
-            final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
-
-            final Vector2 p = new Vector2();
-            final float sides = 6;
-            for (int i = 0; i < sides; i++) {
-                float a = i * (360f / sides);
-                p.set(0.1f, 0f).rotate(a);
-                vertices.add(p.x);
-                vertices.add(p.y);
-            }
-            final Array<Vector3> points = new Array<>();
-            for (Vector3 point : stroke.points) {
-                points.add(point);
-            }
-            builder.sweep(vertices, points, false);
-
-            builder.end();
-
-            final SketchNode node = new SketchNode(meshPart);
-            project.add(node, true);
-            stroke.clear();
-        }
         return true;
+    }
+
+    private void buildMesh() {
+        final FloatArray vertices = new FloatArray();
+
+        builder.begin();
+
+        final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
+
+        final Vector2 p = new Vector2();
+        final float sides = 6;
+        for (int i = 0; i < sides; i++) {
+            float a = i * (360f / sides);
+            p.set(0.1f, 0f).rotate(a);
+            vertices.add(p.x);
+            vertices.add(p.y);
+        }
+        final Array<Vector3> pointArray = new Array<>();
+        for (Vector3 point : points) {
+            pointArray.add(point);
+        }
+        builder.sweep(vertices, pointArray, false);
+
+        builder.end();
+
+        final SketchNode node = new SketchNode(meshPart);
+        project.add(node, true);
+    }
+
+    @Override
+    public boolean onBackButtonClicked() {
+        if (points.size() > 2) {
+            buildMesh();
+            points.clear();
+            return true;
+        }
+        return false;
     }
 
     @Override

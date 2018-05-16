@@ -153,6 +153,15 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
 
     }
 
+    @Override
+    public boolean onBackButtonClicked() {
+        if (previewNode != null) {
+            setPreviewNode(null);
+            return true;
+        }
+        return false;
+    }
+
     public interface OnNodeAddedListener {
         void nodeAdded(SketchNode node);
     }

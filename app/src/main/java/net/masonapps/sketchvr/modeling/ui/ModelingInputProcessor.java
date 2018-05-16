@@ -79,4 +79,8 @@ public abstract class ModelingInputProcessor implements VrInputProcessor {
     public void setVisible(boolean visible) {
         this.visible = visible;
     }
+
+    public boolean onBackButtonClicked() {
+        return false;
+    }
 }
