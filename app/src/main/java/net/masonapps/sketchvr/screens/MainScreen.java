@@ -94,7 +94,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private final GroupCompleteDialog groupDialog;
     private final Entity gradientBackground;
     private final ExportDialog exportDialog;
-    private final PlanarPointsInput pointInput;
+    private final PlanarPointsInput planarPointsInput;
     private final FreeDrawInput freeDrawInput;
     private final SphericalPointsInput spherePointsInput;
     private TransformWidget3D transformUI;
@@ -280,7 +280,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         mainInterface = new MainInterface(spriteBatch, skin, uiEventListener);
         mainInterface.loadWindowPositions(PreferenceManager.getDefaultSharedPreferences(GdxVr.app.getContext()));
 
-        buttonControls = new ViewControlsVirtualStage(project, spriteBatch, skin, 0.75f, transform -> transformUI.setTransform(transform));
+        buttonControls = new ViewControlsVirtualStage(project, spriteBatch, skin, 0.075f, transform -> transformUI.setTransform(transform));
         buttonControls.setVisible(false);
 
         // TODO: 5/9/2018 move to new view controls 
@@ -352,10 +352,10 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         // TODO: 3/23/2018 remove test 
         freeDrawInput = new FreeDrawInput(project);
         spherePointsInput = new SphericalPointsInput(project);
-        pointInput = new PlanarPointsInput(project, point -> Logger.d("point added " + point));
-        pointInput.getPlane().set(Vector3.Zero, Vector3.Z);
+        planarPointsInput = new PlanarPointsInput(project, point -> Logger.d("point added " + point));
+        planarPointsInput.getPlane().set(Vector3.Zero, Vector3.Z);
         singleNodeSelector = new SingleNodeSelector(project, this::setSelectedNode);
-        inputProcessorChooser.setActiveProcessor(spherePointsInput);
+        inputProcessorChooser.setActiveProcessor(planarPointsInput);
 
         inputMultiplexer = new VrInputMultiplexer(mainInterface, inputProcessorChooser);
     }
@@ -545,8 +545,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         shapeRenderer.end();
 
         mainInterface.draw(camera);
-        // TODO: 5/13/2018 uncomment 
-//        buttonControls.draw(camera);
+        buttonControls.draw(camera);
     }
 
     @Override
@@ -569,10 +568,12 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         if (buttonControls.isVisible()) {
             buttonControls.setVisible(false);
             mainInterface.setVisible(true);
+            inputProcessorChooser.enable();
             getSolidModelingGame().setCursorVisible(true);
         } else {
             buttonControls.setVisible(true);
             mainInterface.setVisible(false);
+            inputProcessorChooser.disable();
             getSolidModelingGame().setCursorVisible(false);
         }
     }
@@ -589,17 +590,25 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
     @Override
     public void onDaydreamControllerUpdate(Controller controller, int connectionState) {
+        final VrInputProcessor activeProcessor = inputProcessorChooser.getActiveProcessor();
+        if (activeProcessor instanceof ModelingInputProcessor) {
+            ((ModelingInputProcessor) activeProcessor).onDaydreamControllerUpdate(controller, connectionState);
+        }
     }
 
     @Override
     public void onControllerButtonEvent(Controller controller, DaydreamButtonEvent event) {
+        final VrInputProcessor activeProcessor = inputProcessorChooser.getActiveProcessor();
+        if (activeProcessor instanceof ModelingInputProcessor) {
+            ((ModelingInputProcessor) activeProcessor).onControllerButtonEvent(controller, event);
+        }
     }
 
     @Override
     public void onControllerTouchPadEvent(Controller controller, DaydreamTouchEvent event) {
         final VrInputProcessor activeProcessor = inputProcessorChooser.getActiveProcessor();
-        if (activeProcessor instanceof FreeDrawInput) {
-            freeDrawInput.onControllerTouchPadEvent(event);
+        if (activeProcessor instanceof ModelingInputProcessor) {
+            ((ModelingInputProcessor) activeProcessor).onControllerTouchPadEvent(controller, event);
         }
     }
 

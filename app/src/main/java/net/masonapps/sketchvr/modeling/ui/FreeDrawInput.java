@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
+import com.google.vr.sdk.controller.Controller;
 
 import net.masonapps.sketchvr.math.Segment;
 import net.masonapps.sketchvr.mesh.Stroke;
@@ -131,7 +132,8 @@ public class FreeDrawInput extends ModelingInputProcessor {
         this.drawDistance = drawDistance;
     }
 
-    public void onControllerTouchPadEvent(DaydreamTouchEvent event) {
+    @Override
+    public void onControllerTouchPadEvent(Controller controller, DaydreamTouchEvent event) {
         switch (event.action) {
             case DaydreamTouchEvent.ACTION_DOWN:
                 gestureDetector.touchDown(event.x * TOUCHPAD_SCALE, event.y * TOUCHPAD_SCALE, 0, 0);

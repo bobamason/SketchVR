@@ -240,6 +240,7 @@ public class SketchMeshBuilder extends MeshBuilder {
             // calculate rays to project onto current plane
             dir.set(curr).sub(prev).nor();
             plane1.set(prev, dir);
+            rays.clear();
             for (int j = 0; j < polygon.size; j += 2) {
                 p1.set(polygon.get(j), polygon.get(j + 1));
                 PlaneUtils.toSpace(plane1, p1, vTmp);
@@ -251,7 +252,9 @@ public class SketchMeshBuilder extends MeshBuilder {
 
             end.clear();
             for (int j = 0; j < rays.size; j++) {
-                Intersector.intersectRayPlane(rays.get(j), plane2, vTmp);
+                final Ray ray = rays.get(j);
+                final Vector3 s = start.get(j);
+                Intersector.intersectRayPlane(ray, plane2, vTmp.set(s));
                 end.add(vTmp.cpy());
             }
             extrude(start, end, clockwise);
@@ -288,13 +291,9 @@ public class SketchMeshBuilder extends MeshBuilder {
         bottomPath.clear();
         tmpVertices.clear();
         final float hw = strokeWidth / 2;
-        float x;
-        float y;
         // path start
         off1.set(path.get(1)).sub(path.get(0));
-        x = -off1.y;
-        y = off1.x;
-        off1.set(x, y).nor().scl(hw);
+        off1.nor().scl(hw).rotate90(1);
         p1.set(off1).add(path.get(0));
         // path start top
         topPath.add(p1.cpy());
@@ -308,9 +307,7 @@ public class SketchMeshBuilder extends MeshBuilder {
             //  top
             //      first segment
             off1.set(curr).sub(prev);
-            x = -off1.y;
-            y = off1.x;
-            off1.set(x, y).nor().scl(hw);
+            off1.nor().scl(hw).rotate90(1);
             //      first point of first segment
             p1.set(off1).add(prev);
             //      second point of first segment
@@ -318,9 +315,7 @@ public class SketchMeshBuilder extends MeshBuilder {
 
             //      second segment
             off2.set(next).sub(curr);
-            x = -off2.y;
-            y = off2.x;
-            off2.set(x, y).nor().scl(hw);
+            off2.nor().scl(hw).rotate90(1);
             //      first point of second segment
             p3.set(off2).add(curr);
             //      second point of second segment
@@ -352,9 +347,7 @@ public class SketchMeshBuilder extends MeshBuilder {
         }
         // path end
         off1.set(path.get(n - 1)).sub(path.get(n - 2));
-        x = -off1.y;
-        y = off1.x;
-        off1.set(x, y).nor().scl(hw);
+        off1.nor().scl(hw).rotate90(1);
         p1.set(off1).add(path.get(n - 1));
         // path end top
         topPath.add(p1.cpy());

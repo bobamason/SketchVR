@@ -16,7 +16,6 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -98,12 +97,12 @@ public class SolidModelingGame extends VrGame {
 //        textureParameter.minFilter = Texture.TextureFilter.Linear;
 //        textureParameter.magFilter = Texture.TextureFilter.Linear;
 
-        final String vertexShader = Gdx.files.internal("shaders/fxaa.vertex.glsl").readString();
-        final String fragmentShader = Gdx.files.internal("shaders/fxaa.fragment.glsl").readString();
-        Logger.d("post processing vertex shader:\n" + vertexShader);
-        Logger.d("post processing fragment shader:\n" + fragmentShader);
-        final ShaderProgram postProcessingShader = new ShaderProgram(vertexShader, fragmentShader);
-        GdxVr.graphics.setPostProcessingShader(postProcessingShader);
+//        final String vertexShader = Gdx.files.internal("shaders/fxaa.vertex.glsl").readString();
+//        final String fragmentShader = Gdx.files.internal("shaders/fxaa.fragment.glsl").readString();
+//        Logger.d("post processing vertex shader:\n" + vertexShader);
+//        Logger.d("post processing fragment shader:\n" + fragmentShader);
+//        final ShaderProgram postProcessingShader = new ShaderProgram(vertexShader, fragmentShader);
+//        GdxVr.graphics.setPostProcessingShader(postProcessingShader);
     }
 
     @Override

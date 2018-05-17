@@ -101,7 +101,12 @@ public class ViewControlsVirtualStage extends QuadButtonVirtualStage {
     }
 
     @Override
-    public boolean performRayTest(Ray ray) {
+    public void act(float delta) {
+        if (!isVisible()) return;
+        super.act(delta);
+        rotationAnimator.update(delta);
+        positionAnimator.update(delta);
+        final Ray ray = GdxVr.input.getInputRay();
         switch (transformAction) {
             case PAN:
                 pan(ray);
@@ -115,14 +120,6 @@ public class ViewControlsVirtualStage extends QuadButtonVirtualStage {
             default:
                 break;
         }
-        return super.performRayTest(ray);
-    }
-
-    @Override
-    public void act(float delta) {
-        super.act(delta);
-        rotationAnimator.update(delta);
-        positionAnimator.update(delta);
     }
 
     @Override

@@ -5,19 +5,20 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.input.GestureDetector;
-import com.badlogic.gdx.math.Plane;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
+import com.google.vr.sdk.controller.Controller;
 
-import net.masonapps.sketchvr.math.Segment;
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.input.DaydreamTouchEvent;
+import org.masonapps.libgdxgooglevr.utils.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +29,9 @@ import java.util.List;
 
 public class SphericalPointsInput extends ModelingInputProcessor {
 
-    private static final float TOUCHPAD_SCALE = 400f;
+    private static final float TOUCHPAD_SCALE = 500f;
     private final SketchMeshBuilder builder;
     private final Vector3 point = new Vector3();
-    private final Segment seg1 = new Segment();
-    private final Segment seg2 = new Segment();
-    private final Plane tmpPlane = new Plane();
-    private final Plane tmpPlane2 = new Plane();
     private float drawDistance = 3f;
     private GestureDetector gestureDetector;
     private List<Vector3> points = new ArrayList<>();
@@ -42,12 +39,12 @@ public class SphericalPointsInput extends ModelingInputProcessor {
     public SphericalPointsInput(SketchProjectEntity project) {
         super(project);
         this.builder = project.getBuilder();
-        gestureDetector = new GestureDetector(new GestureDetector.GestureAdapter() {
+        gestureDetector = new GestureDetector(100, 0.4f, 1.1f, 0.15f, new GestureDetector.GestureAdapter() {
 
             @Override
             public boolean pan(float x, float y, float deltaX, float deltaY) {
-                final float sensitivity = 4f;
-                setDrawDistance(getDrawDistance() + deltaY / TOUCHPAD_SCALE * sensitivity);
+                final float sensitivity = 2f;
+                setDrawDistance(getDrawDistance() - deltaY / TOUCHPAD_SCALE * sensitivity);
                 return true;
             }
         });
@@ -55,6 +52,7 @@ public class SphericalPointsInput extends ModelingInputProcessor {
 
     @Override
     public boolean performRayTest(Ray ray) {
+        isCursorOver = true;
         intersectionInfo.hitPoint.set(ray.origin).add(ray.direction).nor().scl(drawDistance);
         point.set(intersectionInfo.hitPoint).mul(project.getInverseTransform());
         return true;
@@ -62,10 +60,24 @@ public class SphericalPointsInput extends ModelingInputProcessor {
 
     @Override
     public void draw(ShapeRenderer shapeRenderer) {
+        if (points.isEmpty()) return;
         shapeRenderer.setColor(Color.GREEN);
-        for (int i = 0; i < points.size() - 1; i++) {
-            shapeRenderer.line(points.get(i), points.get(i + 1));
+        for (int i = 0; i < points.size(); i++) {
+            if (i == points.size() - 1) {
+                if (isCursorOver)
+                    shapeRenderer.line(points.get(i), point);
+            } else {
+                shapeRenderer.line(points.get(i), points.get(i + 1));
+            }
         }
+        shapeRenderer.setColor(Color.WHITE);
+
+        final float r = 0.05f;
+        final float d = 2f * r;
+        points.forEach(p -> shapeRenderer.box(p.x - r, p.y - r, p.z + r, d, d, d));
+
+        if (isCursorOver)
+            shapeRenderer.box(point.x - r, point.y - r, point.z - r, d, d, d);
     }
 
     @Override
@@ -108,7 +120,9 @@ public class SphericalPointsInput extends ModelingInputProcessor {
 
     @Override
     public boolean onBackButtonClicked() {
-        if (points.size() > 2) {
+        Logger.d("onBackButtonClicked()");
+        if (points.size() >= 2) {
+            Logger.d("buildingMesh");
             buildMesh();
             points.clear();
             return true;
@@ -131,10 +145,11 @@ public class SphericalPointsInput extends ModelingInputProcessor {
     }
 
     public void setDrawDistance(float drawDistance) {
-        this.drawDistance = drawDistance;
+        this.drawDistance = MathUtils.clamp(drawDistance, 1.5f, 25f);
     }
 
-    public void onControllerTouchPadEvent(DaydreamTouchEvent event) {
+    @Override
+    public void onControllerTouchPadEvent(Controller controller, DaydreamTouchEvent event) {
         switch (event.action) {
             case DaydreamTouchEvent.ACTION_DOWN:
                 gestureDetector.touchDown(event.x * TOUCHPAD_SCALE, event.y * TOUCHPAD_SCALE, 0, 0);

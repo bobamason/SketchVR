@@ -6,17 +6,21 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
+import com.google.vr.sdk.controller.Controller;
 
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.gfx.AABBTree;
+import org.masonapps.libgdxgooglevr.input.DaydreamButtonEvent;
+import org.masonapps.libgdxgooglevr.input.DaydreamControllerInputListener;
+import org.masonapps.libgdxgooglevr.input.DaydreamTouchEvent;
 import org.masonapps.libgdxgooglevr.input.VrInputProcessor;
 
 /**
  * Created by Bob Mason on 3/19/2018.
  */
 
-public abstract class ModelingInputProcessor implements VrInputProcessor {
+public abstract class ModelingInputProcessor implements VrInputProcessor, DaydreamControllerInputListener {
 
     protected final SketchProjectEntity project;
     protected final AABBTree.IntersectionInfo intersectionInfo = new AABBTree.IntersectionInfo();
@@ -78,6 +82,26 @@ public abstract class ModelingInputProcessor implements VrInputProcessor {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    @Override
+    public void onControllerButtonEvent(Controller controller, DaydreamButtonEvent event) {
+
+    }
+
+    @Override
+    public void onControllerTouchPadEvent(Controller controller, DaydreamTouchEvent event) {
+
+    }
+
+    @Override
+    public void onControllerConnectionStateChange(int connectionState) {
+
+    }
+
+    @Override
+    public void onDaydreamControllerUpdate(Controller controller, int connectionState) {
+
     }
 
     public boolean onBackButtonClicked() {
