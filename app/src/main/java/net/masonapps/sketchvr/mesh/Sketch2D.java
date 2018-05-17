@@ -5,8 +5,10 @@ import com.badlogic.gdx.math.Vector2;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
-import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.geom.impl.CoordinateArraySequence;
 import org.locationtech.jts.io.WKTReader;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
 import org.masonapps.libgdxgooglevr.utils.Logger;
@@ -25,6 +27,8 @@ public class Sketch2D {
     public List<Vector2> tmpPoints = new ArrayList<>();
     private final List<Geometry> lines = new ArrayList<>();
     private final WKTReader rdr = new WKTReader();
+    private final GeometryFactory geometryFactory = new GeometryFactory();
+    ;
 
     public void addPoint(Vector2 point) {
         Vector2 vertex = getDuplicate(point);
@@ -33,7 +37,8 @@ public class Sketch2D {
             points.add(vertex);
         }
         if (points.size() >= 2)
-            checkSelfIntersection();
+            addEdge(points.get(points.size() - 2), points.get(points.size() - 1));
+//            checkSelfIntersection();
     }
 
     private Vector2 getDuplicate(Vector2 vertex) {
@@ -92,20 +97,21 @@ public class Sketch2D {
     }
 
     private void addEdge(Vector2 v1, Vector2 v2) {
-//        final Geometry lineStr = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(v1.x, v1.y), new Coordinate(v2.x, v2.y)}), new GeometryFactory());
-//        lines.add(lineStr);
+        final Geometry lineStr = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(v1.x, v1.y), new Coordinate(v2.x, v2.y)}), geometryFactory);
+        lines.add(lineStr);
 
-        try {
-            final String lineStr = "LINESTRING (" + v1.x + " " + v1.y + ", " + v2.x + " " + v2.y + ")";
-            Logger.d(lineStr);
-            lines.add(rdr.read(lineStr));
-        } catch (ParseException e) {
-            Logger.e("ParseException", e);
-        }
+//        try {
+//            final String lineStr = "LINESTRING (" + v1.x + " " + v1.y + ", " + v2.x + " " + v2.y + ")";
+//            Logger.d(lineStr);
+//            lines.add(rdr.read(lineStr));
+//        } catch (ParseException e) {
+//            Logger.e("ParseException", e);
+//        }
     }
 
     public List<List<Vector2>> getLoops() {
-        Polygonizer polygonizer = new Polygonizer();
+        // TODO: 5/17/2018 handle holes 
+        Polygonizer polygonizer = new Polygonizer(true);
         polygonizer.add(lines);
         final ArrayList<List<Vector2>> loops = new ArrayList<>();
         final Collection polygons = polygonizer.getPolygons();
@@ -113,7 +119,7 @@ public class Sketch2D {
         Logger.d("polygons = " + polygons);
         for (Object obj : polygons) {
             if (obj instanceof Polygon) {
-                final Polygon poly = (Polygon) obj;
+                final Polygon poly = (Polygon) obj; 
                 final Coordinate[] coordinates = poly.getCoordinates();
                 if (coordinates.length >= 3) {
                     final ArrayList<Vector2> loop = new ArrayList<>();
@@ -128,12 +134,12 @@ public class Sketch2D {
     }
 
     public void clear() {
-//        remove edges;
+        lines.clear();
         points.clear();
     }
 
     public void closePath() {
-//        if (points.size() >= 3)
-//            addEdge(points.get(points.size() - 1), points.get(0));
+        if (points.size() >= 3)
+            addEdge(points.get(points.size() - 1), points.get(0));
     }
 }
