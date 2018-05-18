@@ -14,10 +14,10 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 
-import net.masonapps.sketchvr.mesh.Sketch2D;
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
+import net.masonapps.sketchvr.sketch.Sketch2D;
 
 import org.masonapps.libgdxgooglevr.math.PlaneUtils;
 import org.masonapps.libgdxgooglevr.utils.Logger;
