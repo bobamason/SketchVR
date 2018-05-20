@@ -49,14 +49,12 @@ import net.masonapps.sketchvr.modeling.transform.TransformWidget3D;
 import net.masonapps.sketchvr.modeling.transform.TranslateWidget;
 import net.masonapps.sketchvr.modeling.ui.AddNodeInput;
 import net.masonapps.sketchvr.modeling.ui.EditModeTable;
-import net.masonapps.sketchvr.modeling.ui.FreeDrawInput;
 import net.masonapps.sketchvr.modeling.ui.InputProcessorChooser;
 import net.masonapps.sketchvr.modeling.ui.MainInterface;
 import net.masonapps.sketchvr.modeling.ui.ModelingInputProcessor;
 import net.masonapps.sketchvr.modeling.ui.MultiNodeSelector;
 import net.masonapps.sketchvr.modeling.ui.PlanarPointsInput;
 import net.masonapps.sketchvr.modeling.ui.SingleNodeSelector;
-import net.masonapps.sketchvr.modeling.ui.SphericalPointsInput;
 import net.masonapps.sketchvr.ui.ExportDialog;
 import net.masonapps.sketchvr.ui.GroupCompleteDialog;
 
@@ -95,8 +93,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private final Entity gradientBackground;
     private final ExportDialog exportDialog;
     private final PlanarPointsInput planarPointsInput;
-    private final FreeDrawInput freeDrawInput;
-    private final SphericalPointsInput spherePointsInput;
     private TransformWidget3D transformUI;
     private float projectScale = 1f;
     private String projectName;
@@ -350,8 +346,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         project.setScale(projectScale);
 
         // TODO: 3/23/2018 remove test 
-        freeDrawInput = new FreeDrawInput(project);
-        spherePointsInput = new SphericalPointsInput(project);
         planarPointsInput = new PlanarPointsInput(project, point -> Logger.d("point added " + point));
         planarPointsInput.getPlane().set(Vector3.Zero, Vector3.Z);
         singleNodeSelector = new SingleNodeSelector(project, this::setSelectedNode);
