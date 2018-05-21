@@ -15,9 +15,16 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.ShortArray;
 
+import org.locationtech.jts.geom.Coordinate;
 import org.masonapps.libgdxgooglevr.math.PlaneUtils;
+import org.poly2tri.Poly2Tri;
+import org.poly2tri.geometry.polygon.Polygon;
+import org.poly2tri.geometry.polygon.PolygonPoint;
+import org.poly2tri.triangulation.delaunay.DelaunayTriangle;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by Bob Mason on 5/3/2018.
@@ -35,6 +42,10 @@ public class SketchMeshBuilder extends MeshBuilder {
     private final static Vector2 p2 = new Vector2();
     private final static Vector2 p3 = new Vector2();
     private final static Vector2 p4 = new Vector2();
+    private final static Vector3 v1 = new Vector3();
+    private final static Vector3 v2 = new Vector3();
+    private final static Vector3 v3 = new Vector3();
+    private final static Vector3 v4 = new Vector3();
     private final static Vector2 off1 = new Vector2();
     private final static Vector2 off2 = new Vector2();
     private final static Vector2 intersectV2 = new Vector2();
@@ -383,5 +394,31 @@ public class SketchMeshBuilder extends MeshBuilder {
 //        }
 //        
 //        polygonExtruded(tmpVertices, plane, strokeWidth);
+    }
+
+    public void polygon(org.locationtech.jts.geom.Polygon polygon, Plane plane) {
+        final Coordinate[] ringCoords = polygon.getExteriorRing().getCoordinates();
+        final List<PolygonPoint> points = Arrays.stream(ringCoords).map(c -> new PolygonPoint(c.x, c.y)).collect(Collectors.toList());
+        final org.poly2tri.geometry.polygon.Polygon poly = new Polygon(points);
+        for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+            final Coordinate[] holeCoords = polygon.getInteriorRingN(i).getCoordinates();
+            final List<PolygonPoint> holePoints = Arrays.stream(holeCoords).map(c -> new PolygonPoint(c.x, c.y)).collect(Collectors.toList());
+            poly.addHole(new Polygon(holePoints));
+        }
+        Poly2Tri.triangulate(poly);
+        final List<DelaunayTriangle> triangles = poly.getTriangles();
+        for (DelaunayTriangle triangle : triangles) {
+            p1.set(triangle.points[0].getXf(), triangle.points[0].getYf());
+            p2.set(triangle.points[1].getXf(), triangle.points[1].getYf());
+            p3.set(triangle.points[2].getXf(), triangle.points[2].getYf());
+            PlaneUtils.toSpace(plane, p1, v1);
+            PlaneUtils.toSpace(plane, p2, v2);
+            PlaneUtils.toSpace(plane, p3, v3);
+            triangle2sided(v1, v2, v3);
+        }
+    }
+
+    public void polygonExtruded(org.locationtech.jts.geom.Polygon polygon, Plane plane) {
+
     }
 }

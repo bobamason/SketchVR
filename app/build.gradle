@@ -33,4 +33,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation project(':libgdxgvr')
     implementation 'org.locationtech.jts:jts-core:1.15.0'
+    implementation 'org.orbisgis:poly2tri-core:0.1.2'
 }

@@ -2,8 +2,6 @@ package net.masonapps.sketchvr.sketch;
 
 import com.badlogic.gdx.math.Vector2;
 
-import net.masonapps.sketchvr.modeling.PolygonUtils;
-
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -12,6 +10,7 @@ import org.locationtech.jts.geom.impl.CoordinateArraySequence;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -47,14 +46,14 @@ public class Sketch2D {
         lines.add(lineStr);
     }
 
-    public List<List<Vector2>> getLoops() {
+    public Collection getPolygons() {
         Polygonizer polygonizer = new Polygonizer(true);
         Geometry nodedLines = lines.get(0);
         for (int i = 1; i < lines.size(); i++) {
             nodedLines = nodedLines.union(lines.get(i));
         }
         polygonizer.add(nodedLines);
-        return PolygonUtils.getLoops(polygonizer.getPolygons());
+        return polygonizer.getPolygons();
     }
 
     public void clear() {

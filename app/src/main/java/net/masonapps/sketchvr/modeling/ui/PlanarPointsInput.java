@@ -19,10 +19,10 @@ import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.sketch.Sketch2D;
 
+import org.locationtech.jts.geom.Polygon;
 import org.masonapps.libgdxgooglevr.math.PlaneUtils;
-import org.masonapps.libgdxgooglevr.utils.Logger;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Created by Bob Mason on 3/22/2018.
@@ -137,39 +137,16 @@ public class PlanarPointsInput extends ModelingInputProcessor {
         builder.begin();
         final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
 
-        final List<List<Vector2>> loops = sketch2D.getLoops();
-        boolean valid = false;
-        Logger.d(loops.size() + " loops");
-        for (int i = 0; i < loops.size(); i++) {
-            final List<Vector2> loop = loops.get(i);
-            Logger.d("loop " + i + " has " + loop.size() + " vertices");
-            vertices.clear();
-            for (Vector2 v : loop) {
-                vertices.add(v.x);
-                vertices.add(v.y);
-            }
-            if (vertices.size >= 6) {
-                builder.polygonExtruded(vertices, plane, 0.5f);
-                valid = true;
-            }
+        final Collection polygons = sketch2D.getPolygons();
+        for (Object poly : polygons) {
+            if (poly instanceof Polygon)
+                builder.polygon((Polygon) poly, plane);
         }
-
-        // TODO: 5/15/2018 remove sweep test 
-//        final Vector2 p = new Vector2();
-//        final float sides = 6;
-//        for (int i = 0; i < sides; i++) {
-//            float a = i * (360f / sides);
-//            p.set(0.1f, 0f).rotate(a);
-//            vertices.add(p.x);
-//            vertices.add(p.y);
-//        }
-//        builder.drawStrokePath(sketch2D.points, plane, 0.1f, true);
-//        valid = true;
         
         builder.end();
         points.clear();
         sketch2D.clear();
-        if (valid) {
+        if (meshPart.mesh.getNumVertices() > 3) {
             final SketchNode node = new SketchNode(meshPart);
             project.add(node, true);
         }
