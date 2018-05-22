@@ -47,13 +47,14 @@ import net.masonapps.sketchvr.modeling.transform.ScaleWidget;
 import net.masonapps.sketchvr.modeling.transform.SimpleGrabControls;
 import net.masonapps.sketchvr.modeling.transform.TransformWidget3D;
 import net.masonapps.sketchvr.modeling.transform.TranslateWidget;
-import net.masonapps.sketchvr.modeling.ui.AddNodeInput;
+import net.masonapps.sketchvr.modeling.ui.DuplicateNodeInput;
 import net.masonapps.sketchvr.modeling.ui.EditModeTable;
 import net.masonapps.sketchvr.modeling.ui.InputProcessorChooser;
 import net.masonapps.sketchvr.modeling.ui.MainInterface;
 import net.masonapps.sketchvr.modeling.ui.ModelingInputProcessor;
 import net.masonapps.sketchvr.modeling.ui.MultiNodeSelector;
 import net.masonapps.sketchvr.modeling.ui.PlanarPointsInput;
+import net.masonapps.sketchvr.modeling.ui.RenderableInput;
 import net.masonapps.sketchvr.modeling.ui.SingleNodeSelector;
 import net.masonapps.sketchvr.ui.ExportDialog;
 import net.masonapps.sketchvr.ui.GroupCompleteDialog;
@@ -114,7 +115,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     @Nullable
     private SketchNode nodeToAdd = null;
     private InputProcessorChooser inputProcessorChooser;
-    private AddNodeInput addNodeInput;
+    private DuplicateNodeInput duplicateNodeInput;
     private SingleNodeSelector singleNodeSelector;
     private MultiNodeSelector multiNodeSelector;
     private VrInputMultiplexer inputMultiplexer;
@@ -180,7 +181,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         manageDisposable(shapeRenderer, spriteBatch);
 
 
-        addNodeInput = new AddNodeInput(project, node -> Logger.d("node added"));
+        duplicateNodeInput = new DuplicateNodeInput(project, node -> Logger.d("node added"));
 
         multiNodeSelector = new MultiNodeSelector(project, nodes -> {
             selectionBox.inf();
@@ -212,9 +213,9 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             public void onDuplicateClicked() {
                 if (selectedNode != null) {
                     final SketchNode previewNode = selectedNode.copy();
-                    addNodeInput.setPreviewNode(previewNode);
-                    addNodeInput.setVisible(true);
-                    inputProcessorChooser.setActiveProcessor(addNodeInput);
+                    duplicateNodeInput.setPreviewNode(previewNode);
+                    duplicateNodeInput.setVisible(true);
+                    inputProcessorChooser.setActiveProcessor(duplicateNodeInput);
                 }
             }
 
@@ -277,7 +278,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         mainInterface.loadWindowPositions(PreferenceManager.getDefaultSharedPreferences(GdxVr.app.getContext()));
 
         buttonControls = new ViewControlsVirtualStage(project, spriteBatch, skin, 0.075f, transform -> transformUI.setTransform(transform));
-        buttonControls.setVisible(false);
 
         // TODO: 5/9/2018 move to new view controls 
 //        final float sliderVal = 1f - (float) Math.sqrt((-projectPosition.z - MIN_Z) / (MAX_Z - MIN_Z));
@@ -421,15 +421,19 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             public void update() {
                 super.update();
                 project.update();
-                transformUI.update();
+                final VrInputProcessor activeProcessor = inputProcessorChooser.getActiveProcessor();
+                if (activeProcessor instanceof RenderableInput)
+                    ((RenderableInput) activeProcessor).update();
             }
 
             @Override
             public void render(ModelBatch batch, Environment environment) {
                 super.render(batch, environment);
                 gridFloor.render(batch);
-                transformUI.render(batch);
-                addNodeInput.render(batch);
+
+                final VrInputProcessor activeProcessor = inputProcessorChooser.getActiveProcessor();
+                if (activeProcessor instanceof RenderableInput)
+                    ((RenderableInput) activeProcessor).render(batch);
             }
         };
     }
@@ -462,6 +466,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         getVrCamera().position.set(0, 0f, 0);
         getVrCamera().lookAt(0, 0, -1);
         buttonControls.attachListener();
+        buttonControls.setVisible(false);
     }
 
     @Override
@@ -554,6 +559,8 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
                 } else {
                     toggleViewControls();
                 }
+            } else {
+                toggleViewControls();
             }
         }
     }

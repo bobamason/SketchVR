@@ -12,7 +12,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.FloatArray;
 
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
 import net.masonapps.sketchvr.modeling.SketchNode;
@@ -132,7 +131,6 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             sketch2D.clear();
             return;
         }
-        final FloatArray vertices = new FloatArray();
         sketch2D.closePath();
         builder.begin();
         final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
@@ -140,7 +138,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
         final Collection polygons = sketch2D.getPolygons();
         for (Object poly : polygons) {
             if (poly instanceof Polygon)
-                builder.polygon((Polygon) poly, plane);
+                builder.polygonExtruded((Polygon) poly, plane, 0.12f);
         }
         
         builder.end();
@@ -159,31 +157,30 @@ public class PlanarPointsInput extends ModelingInputProcessor {
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        return false;
+        return isCursorOver;
     }
 
     @Override
-    public boolean mouseMoved(int screenX, int screenY) {
-        return false;
-    }
+    public boolean onBackButtonClicked() {
+        if (points.size >= 2) {
+            builder.begin();
+            final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
 
-    @Override
-    public boolean scrolled(int amount) {
-        return false;
-    }
+            final Collection polygons = sketch2D.getPolygons();
+            for (Object poly : polygons) {
+                if (poly instanceof Polygon)
+                    builder.polygonExtruded((Polygon) poly, plane, 0.12f);
+            }
 
-    @Override
-    public boolean keyDown(int keycode) {
-        return false;
-    }
-
-    @Override
-    public boolean keyUp(int keycode) {
-        return false;
-    }
-
-    @Override
-    public boolean keyTyped(char character) {
+            builder.end();
+            points.clear();
+            sketch2D.clear();
+            if (meshPart.mesh.getNumVertices() > 3) {
+                final SketchNode node = new SketchNode(meshPart);
+                project.add(node, true);
+            }
+            return true;
+        }
         return false;
     }
 

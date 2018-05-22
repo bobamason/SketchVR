@@ -56,6 +56,16 @@ public class Sketch2D {
         return polygonizer.getPolygons();
     }
 
+    public Collection getBufferPolygons(float distance) {
+        Polygonizer polygonizer = new Polygonizer(true);
+        Geometry nodedLines = lines.get(0);
+        for (int i = 1; i < lines.size(); i++) {
+            nodedLines = nodedLines.union(lines.get(i));
+        }
+        polygonizer.add(nodedLines.buffer(distance, 4));
+        return polygonizer.getPolygons();
+    }
+
     public void clear() {
         lines.clear();
         points.clear();

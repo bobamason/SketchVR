@@ -19,14 +19,13 @@ import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 
 import org.masonapps.libgdxgooglevr.input.DaydreamButtonEvent;
-import org.masonapps.libgdxgooglevr.input.DaydreamControllerInputListener;
 import org.masonapps.libgdxgooglevr.input.DaydreamTouchEvent;
 
 /**
  * Created by Bob Mason on 3/19/2018.
  */
 
-public class AddNodeInput extends ModelingInputProcessor implements DaydreamControllerInputListener {
+public class DuplicateNodeInput extends ModelingInputProcessor implements RenderableInput {
 
     private final OnNodeAddedListener listener;
     private final ModelInstance modelInstance;
@@ -35,13 +34,19 @@ public class AddNodeInput extends ModelingInputProcessor implements DaydreamCont
     private SketchNode previewNode = null;
     private float distance = 3f;
 
-    public AddNodeInput(SketchProjectEntity modelingProject, OnNodeAddedListener listener) {
+    public DuplicateNodeInput(SketchProjectEntity modelingProject, OnNodeAddedListener listener) {
         super(modelingProject);
         this.listener = listener;
         modelInstance = new ModelInstance(new Model());
         material = new Material(ColorAttribute.createDiffuse(Color.CYAN), new BlendingAttribute(true, 0.5f));
     }
 
+    @Override
+    public void update() {
+
+    }
+
+    @Override
     public void render(ModelBatch modelBatch) {
         if (isVisible() && previewNode != null)
             modelBatch.render(modelInstance);

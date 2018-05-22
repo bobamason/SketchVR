@@ -72,6 +72,11 @@ public abstract class ModelingInputProcessor implements VrInputProcessor, Daydre
     }
 
     @Override
+    public boolean mouseMoved(int screenX, int screenY) {
+        return false;
+    }
+
+    @Override
     public boolean scrolled(int amount) {
         return false;
     }

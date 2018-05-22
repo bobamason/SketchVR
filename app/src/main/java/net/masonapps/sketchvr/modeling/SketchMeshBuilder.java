@@ -46,6 +46,8 @@ public class SketchMeshBuilder extends MeshBuilder {
     private final static Vector3 v2 = new Vector3();
     private final static Vector3 v3 = new Vector3();
     private final static Vector3 v4 = new Vector3();
+    private final static Vector3 offset = new Vector3();
+    private final static Vector3 offset2 = new Vector3();
     private final static Vector2 off1 = new Vector2();
     private final static Vector2 off2 = new Vector2();
     private final static Vector2 intersectV2 = new Vector2();
@@ -88,9 +90,17 @@ public class SketchMeshBuilder extends MeshBuilder {
                 vertTmp4.set(null, null, null, null).setPos(x01, y01, z01).setNor(normal.x, normal.y, normal.z).setUV(0f, 0f));
     }
 
+    @Override
+    public void triangle(Vector3 p1, Vector3 p2, Vector3 p3) {
+        normal.set(p1).sub(p2).crs(p2.x - p3.x, p2.y - p3.y, p2.z - p3.z).nor();
+        triangle(vertTmp1.set(p1, normal, null, null), vertTmp2.set(p2, normal, null, null), vertTmp3.set(p3, normal, null, null));
+    }
+
     public void triangle2sided(Vector3 p1, Vector3 p2, Vector3 p3) {
         normal.set(p1).sub(p2).crs(p2.x - p3.x, p2.y - p3.y, p2.z - p3.z).nor();
         triangle(vertTmp1.set(p1, normal, null, null), vertTmp2.set(p2, normal, null, null), vertTmp3.set(p3, normal, null, null));
+        normal.scl(-1);
+        triangle(vertTmp1.set(p3, normal, null, null), vertTmp2.set(p2, normal, null, null), vertTmp3.set(p1, normal, null, null));
     }
 
     public void triangle2sided(float x1, float y1, float z1,
@@ -418,7 +428,62 @@ public class SketchMeshBuilder extends MeshBuilder {
         }
     }
 
-    public void polygonExtruded(org.locationtech.jts.geom.Polygon polygon, Plane plane) {
+    public void polygonExtruded(org.locationtech.jts.geom.Polygon polygon, Plane plane, float depth) {
+        offset.set(plane.normal).nor().scl(depth / 2f);
+        offset2.set(plane.normal).nor().scl(-depth / 2f);
+        final Coordinate[] ringCoords = polygon.getExteriorRing().getCoordinates();
+        for (int j = 0; j < ringCoords.length; j++) {
+            p1.set((float) ringCoords[j].x, (float) ringCoords[j].y);
+            final int j2 = (j + 1) % ringCoords.length;
+            p2.set((float) ringCoords[j2].x, (float) ringCoords[j2].y);
+            PlaneUtils.toSpace(plane, p1, v1);
+            PlaneUtils.toSpace(plane, p2, v2);
+            v3.set(v1).add(offset2);
+            v4.set(v2).add(offset2);
+            v1.add(offset);
+            v2.add(offset);
+            rect(v1, v2, v4, v3);
+        }
+        final List<PolygonPoint> points = Arrays.stream(ringCoords).map(c -> new PolygonPoint(c.x, c.y)).collect(Collectors.toList());
+        final org.poly2tri.geometry.polygon.Polygon poly = new Polygon(points);
+        for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+            final Coordinate[] holeCoords = polygon.getInteriorRingN(i).getCoordinates();
+            for (int j = 0; j < holeCoords.length; j++) {
+                p1.set((float) holeCoords[j].x, (float) holeCoords[j].y);
+                final int j2 = (j + 1) % holeCoords.length;
+                p2.set((float) holeCoords[j2].x, (float) holeCoords[j2].y);
+                PlaneUtils.toSpace(plane, p1, v1);
+                PlaneUtils.toSpace(plane, p2, v2);
+                v3.set(v1).add(offset2);
+                v4.set(v2).add(offset2);
+                v1.add(offset);
+                v2.add(offset);
+                rect(v1, v2, v4, v3);
+            }
+            final List<PolygonPoint> holePoints = Arrays.stream(holeCoords).map(c -> new PolygonPoint(c.x, c.y)).collect(Collectors.toList());
+            poly.addHole(new Polygon(holePoints));
+        }
+        Poly2Tri.triangulate(poly);
+        final List<DelaunayTriangle> triangles = poly.getTriangles();
 
+        for (DelaunayTriangle triangle : triangles) {
+            p1.set(triangle.points[0].getXf(), triangle.points[0].getYf());
+            p2.set(triangle.points[1].getXf(), triangle.points[1].getYf());
+            p3.set(triangle.points[2].getXf(), triangle.points[2].getYf());
+            PlaneUtils.toSpace(plane, p1, v1);
+            PlaneUtils.toSpace(plane, p2, v2);
+            PlaneUtils.toSpace(plane, p3, v3);
+            triangle(v1.add(offset), v2.add(offset), v3.add(offset));
+        }
+
+        for (DelaunayTriangle triangle : triangles) {
+            p1.set(triangle.points[0].getXf(), triangle.points[0].getYf());
+            p2.set(triangle.points[1].getXf(), triangle.points[1].getYf());
+            p3.set(triangle.points[2].getXf(), triangle.points[2].getYf());
+            PlaneUtils.toSpace(plane, p1, v1);
+            PlaneUtils.toSpace(plane, p2, v2);
+            PlaneUtils.toSpace(plane, p3, v3);
+            triangle(v3.add(offset2), v2.add(offset2), v1.add(offset2));
+        }
     }
 }
