@@ -335,7 +335,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         mainInterface.addProcessor(exportDialog);
 
         inputProcessorChooser = new InputProcessorChooser();
-        mainInterface.addProcessor(inputProcessorChooser);
 
         gridEntity = new Entity(new ModelInstance(createGrid(modelBuilder, skin, 3f)));
         gridEntity.setLightingEnabled(false);
@@ -351,7 +350,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         singleNodeSelector = new SingleNodeSelector(project, this::setSelectedNode);
         inputProcessorChooser.setActiveProcessor(planarPointsInput);
 
-        inputMultiplexer = new VrInputMultiplexer(mainInterface, inputProcessorChooser);
+        inputMultiplexer = new VrInputMultiplexer(inputProcessorChooser, mainInterface);
     }
 
     private static Model createGrid(ModelBuilder builder, Skin skin, float radius) {
