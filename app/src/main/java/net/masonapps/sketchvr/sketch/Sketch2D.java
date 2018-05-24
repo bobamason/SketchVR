@@ -1,17 +1,22 @@
 package net.masonapps.sketchvr.sketch;
 
+import android.support.annotation.Nullable;
+
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.impl.CoordinateArraySequence;
+import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by Bob Mason on 5/4/2018.
@@ -19,60 +24,102 @@ import java.util.List;
 public class Sketch2D {
 
     private static final float EPSILON = 1e-3f;
-    private final List<LineString> lines = new ArrayList<>();
     private final GeometryFactory geometryFactory = new GeometryFactory();
-    public List<Vector2> points = new ArrayList<>();
-    ;
+    @Nullable
+    private Geometry nodedLines;
 
-    public void addPoint(Vector2 point) {
-        Vector2 vertex = getDuplicate(point);
-        if (vertex == null) {
-            vertex = point.cpy();
-            points.add(vertex);
+    public void addRect(Rectangle rect) {
+        addRing(new Coordinate[]{
+                new Coordinate(rect.x, rect.y),
+                new Coordinate(rect.x + rect.width, rect.y),
+                new Coordinate(rect.x + rect.width, rect.y + rect.height),
+                new Coordinate(rect.x, rect.y + rect.height)});
+    }
+
+    public void addCircle(Vector2 center, float radius) {
+        addCircle(center, radius, 12);
+    }
+
+    public void addCircle(Vector2 center, float radius, int segments) {
+        final Coordinate[] coordinates = new Coordinate[segments];
+        final float aStep = MathUtils.PI2 / segments;
+        for (int i = 0; i < segments; i++) {
+            final float a = i * aStep;
+            coordinates[i] = new Coordinate(center.x + MathUtils.cos(a) * radius, center.y + MathUtils.sin(a) * radius);
         }
-        if (points.size() >= 2)
-            addEdge(points.get(points.size() - 2), points.get(points.size() - 1));
+        addRing(coordinates);
     }
 
-    private Vector2 getDuplicate(Vector2 vertex) {
-        for (Vector2 point : points) {
-            if (point.epsilonEquals(vertex, EPSILON)) return point;
-        }
-        return null;
+    public void addRing(List<Vector2> vecs) {
+        final Coordinate[] coordinates = new Coordinate[vecs.size()];
+        vecs.stream().map(v -> new Coordinate(v.x, v.y))
+                .collect(Collectors.toList())
+                .toArray(coordinates);
+        addRing(coordinates);
     }
 
-    private void addEdge(Vector2 v1, Vector2 v2) {
-        final LineString lineStr = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(v1.x, v1.y), new Coordinate(v2.x, v2.y)}), geometryFactory);
-        lines.add(lineStr);
+    public void addRing(Vector2[] vecs) {
+        final Coordinate[] coordinates = new Coordinate[vecs.length];
+        Arrays.stream(vecs).map(v -> new Coordinate(v.x, v.y))
+                .collect(Collectors.toList())
+                .toArray(coordinates);
+        addRing(coordinates);
     }
 
+    public void addRing(Coordinate[] coordinates) {
+        final LinearRing linearRing = geometryFactory.createLinearRing(coordinates);
+        addGeometry(linearRing);
+    }
+
+    public void addLine(Vector2 v1, Vector2 v2) {
+        addLineString(new Coordinate[]{new Coordinate(v1.x, v1.y), new Coordinate(v2.x, v2.y)});
+    }
+
+    public void addLines(Vector2[] vecs) {
+        final Coordinate[] coordinates = new Coordinate[vecs.length];
+        Arrays.stream(vecs).map(v -> new Coordinate(v.x, v.y))
+                .collect(Collectors.toList())
+                .toArray(coordinates);
+        addLineString(coordinates);
+    }
+
+    public void addLines(List<Vector2> vecs) {
+        final Coordinate[] coordinates = new Coordinate[vecs.size()];
+        vecs.stream().map(v -> new Coordinate(v.x, v.y))
+                .collect(Collectors.toList())
+                .toArray(coordinates);
+        addLineString(coordinates);
+    }
+
+    public void addLineString(Coordinate[] coordinates) {
+        final LineString lineStr = geometryFactory.createLineString(coordinates);
+        addGeometry(lineStr);
+    }
+
+    private void addGeometry(Geometry g) {
+        if (nodedLines == null)
+            nodedLines = g;
+        else
+            nodedLines = nodedLines.union(g);
+    }
+
+    @Nullable
     public Collection getPolygons() {
+        if (nodedLines == null) return null;
         Polygonizer polygonizer = new Polygonizer(true);
-        Geometry nodedLines = lines.get(0);
-        for (int i = 1; i < lines.size(); i++) {
-            nodedLines = nodedLines.union(lines.get(i));
-        }
         polygonizer.add(nodedLines);
         return polygonizer.getPolygons();
     }
 
+    @Nullable
     public Collection getBufferPolygons(float distance) {
+        if (nodedLines == null) return null;
         Polygonizer polygonizer = new Polygonizer(true);
-        Geometry nodedLines = lines.get(0);
-        for (int i = 1; i < lines.size(); i++) {
-            nodedLines = nodedLines.union(lines.get(i));
-        }
         polygonizer.add(nodedLines.buffer(distance, 4));
         return polygonizer.getPolygons();
     }
 
     public void clear() {
-        lines.clear();
-        points.clear();
-    }
-
-    public void closePath() {
-        if (points.size() >= 3)
-            addEdge(points.get(points.size() - 1), points.get(0));
+        nodedLines = null;
     }
 }

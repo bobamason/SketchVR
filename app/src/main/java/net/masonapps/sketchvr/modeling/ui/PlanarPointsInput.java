@@ -39,6 +39,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     private final OnPointAddedListener listener;
     protected boolean isCursorOver = false;
     private Ray transformedRay = new Ray();
+    private Vector2 lastPoint = new Vector2();
 
     public PlanarPointsInput(SketchProjectEntity project, OnPointAddedListener listener) {
         super(project);
@@ -119,7 +120,9 @@ public class PlanarPointsInput extends ModelingInputProcessor {
                 points.add(cpy);
                 listener.pointAdded(cpy);
                 PlaneUtils.toSubSpace(plane, cpy, hitPoint2D);
-                sketch2D.addPoint(hitPoint2D.cpy());
+                if (points.size >= 2)
+                    sketch2D.addLine(lastPoint.cpy(), hitPoint2D.cpy());
+                lastPoint.set(hitPoint2D);
             }
         }
         return isCursorOver;
@@ -140,7 +143,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             if (poly instanceof Polygon)
                 builder.polygonExtruded((Polygon) poly, plane, 0.12f);
         }
-        
+
         builder.end();
         points.clear();
         sketch2D.clear();

@@ -21,6 +21,7 @@ import net.masonapps.sketchvr.Style;
 
 import org.masonapps.libgdxgooglevr.GdxVr;
 import org.masonapps.libgdxgooglevr.ui.VirtualStage;
+import org.masonapps.libgdxgooglevr.utils.Logger;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -145,6 +146,7 @@ public abstract class QuadButtonVirtualStage extends VirtualStage {
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
+        Logger.d("setVisible -> " + visible);
         if (!visible && isTouchDown) {
             buttonDown.setVisible(false);
             Arrays.stream(backgroundImages)
