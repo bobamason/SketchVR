@@ -4,10 +4,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
@@ -28,14 +26,9 @@ import java.util.Collection;
 
 public class SketchInput extends VirtualStage implements ShapeRenderableInput, BackButtonListener {
 
-    private final Plane plane = new Plane();
-    private final Vector2 hitPoint2D = new Vector2();
-    private final Sketch2D sketch2D = new Sketch2D(plane);
+    private final Sketch2D sketch2D;
     private final Vector3 point = new Vector3();
-    private final Vector3 hitPoint3D = new Vector3();
     private final SketchMeshBuilder builder;
-    protected boolean isCursorOver = false;
-    private Ray transformedRay = new Ray();
     private Vector2 lastPoint = new Vector2();
     private SketchProjectEntity project;
 
@@ -43,6 +36,7 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
         super(batch, 1000, 1000);
         this.project = project;
         this.builder = project.getBuilder();
+        sketch2D = new Sketch2D(getPlane());
     }
 
     @Override
@@ -51,24 +45,18 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
     }
 
     @Override
-    public Plane getPlane() {
-        return plane;
-    }
-
-    public void setPlane(Plane plane) {
-        plane.set(plane);
-        invalidate();
-    }
-
-    @Override
     public void draw(ShapeRenderer shapeRenderer) {
+        if (!isVisible()) return;
+        if (!updated) recalculateTransform();
+        shapeRenderer.setTransformMatrix(transform);
         sketch2D.draw(shapeRenderer);
     }
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (isCursorOver) {
-            // TODO: 5/24/2018  
+        if (isVisible() && isCursorOver) {
+            
+            lastPoint.set(screenX, screenY);
         }
         return isCursorOver;
     }
@@ -95,13 +83,17 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
     }
 
     private void buildMesh() {
+        final Collection polygons = sketch2D.getPolygons();
+        if (polygons == null) {
+            Logger.d("no polygons in sketch");
+            return;
+        }
         builder.begin();
         final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
 
-        final Collection polygons = sketch2D.getPolygons();
         for (Object poly : polygons) {
             if (poly instanceof Polygon)
-                builder.polygonExtruded((Polygon) poly, plane, 0.12f);
+                builder.polygonExtruded((Polygon) poly, getPlane(), 0.12f);
         }
 
         builder.end();

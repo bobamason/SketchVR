@@ -8,7 +8,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 
 import net.masonapps.sketchvr.ui.ShapeRenderableInput;
 
@@ -19,7 +18,6 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.util.LineStringExtracter;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
-import org.masonapps.libgdxgooglevr.math.PlaneUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -150,7 +148,7 @@ public class Sketch2D implements ShapeRenderableInput {
         if (renderLines.isEmpty()) return;
         renderer.setColor(Color.GREEN);
         for (RenderLine renderLine : renderLines) {
-            renderer.line(renderLine.v1, renderLine.v2);
+            renderer.line(renderLine.p1, renderLine.p2);
         }
     }
 
@@ -174,14 +172,10 @@ public class Sketch2D implements ShapeRenderableInput {
     private class RenderLine {
         final Vector2 p1 = new Vector2();
         final Vector2 p2 = new Vector2();
-        final Vector3 v1 = new Vector3();
-        final Vector3 v2 = new Vector3();
 
         public RenderLine(Coordinate c1, Coordinate c2) {
             p1.set((float) c1.x, (float) c1.y);
             p2.set((float) c2.x, (float) c2.y);
-            PlaneUtils.toSpace(plane, p1, v1);
-            PlaneUtils.toSpace(plane, p2, v2);
         }
     }
 }
