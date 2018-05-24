@@ -2,13 +2,14 @@ package net.masonapps.sketchvr.modeling.ui;
 
 import android.support.annotation.Nullable;
 
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.google.vr.sdk.controller.Controller;
 
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
+import net.masonapps.sketchvr.ui.BackButtonListener;
+import net.masonapps.sketchvr.ui.ShapeRenderableInput;
 
 import org.masonapps.libgdxgooglevr.gfx.AABBTree;
 import org.masonapps.libgdxgooglevr.input.DaydreamButtonEvent;
@@ -20,7 +21,7 @@ import org.masonapps.libgdxgooglevr.input.VrInputProcessor;
  * Created by Bob Mason on 3/19/2018.
  */
 
-public abstract class ModelingInputProcessor implements VrInputProcessor, DaydreamControllerInputListener {
+public abstract class ModelingInputProcessor implements VrInputProcessor, DaydreamControllerInputListener, ShapeRenderableInput, BackButtonListener {
 
     protected final SketchProjectEntity project;
     protected final AABBTree.IntersectionInfo intersectionInfo = new AABBTree.IntersectionInfo();
@@ -36,8 +37,6 @@ public abstract class ModelingInputProcessor implements VrInputProcessor, Daydre
         isCursorOver = visible && project.rayTest(ray, intersectionInfo);
         return isCursorOver;
     }
-
-    public abstract void draw(ShapeRenderer shapeRenderer);
 
     @Override
     public boolean isCursorOver() {
@@ -109,6 +108,7 @@ public abstract class ModelingInputProcessor implements VrInputProcessor, Daydre
 
     }
 
+    @Override
     public boolean onBackButtonClicked() {
         return false;
     }

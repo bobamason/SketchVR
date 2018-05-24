@@ -54,10 +54,11 @@ import net.masonapps.sketchvr.modeling.ui.MainInterface;
 import net.masonapps.sketchvr.modeling.ui.ModelingInputProcessor;
 import net.masonapps.sketchvr.modeling.ui.MultiNodeSelector;
 import net.masonapps.sketchvr.modeling.ui.PlanarPointsInput;
-import net.masonapps.sketchvr.modeling.ui.RenderableInput;
 import net.masonapps.sketchvr.modeling.ui.SingleNodeSelector;
 import net.masonapps.sketchvr.ui.ExportDialog;
 import net.masonapps.sketchvr.ui.GroupCompleteDialog;
+import net.masonapps.sketchvr.ui.RenderableInput;
+import net.masonapps.sketchvr.ui.ShapeRenderableInput;
 
 import org.masonapps.libgdxgooglevr.GdxVr;
 import org.masonapps.libgdxgooglevr.gfx.AABBTree;
@@ -537,8 +538,8 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 //        AABBTree.debugAABBTree(shapeRenderer, project.getAABBTree(), Color.YELLOW);
         transformUI.drawShapes(shapeRenderer);
 
-        if (inputProcessorChooser.getActiveProcessor() instanceof ModelingInputProcessor)
-            ((ModelingInputProcessor) inputProcessorChooser.getActiveProcessor()).draw(shapeRenderer);
+        if (inputProcessorChooser.getActiveProcessor() instanceof ShapeRenderableInput)
+            ((ShapeRenderableInput) inputProcessorChooser.getActiveProcessor()).draw(shapeRenderer);
 
         shapeRenderer.end();
 

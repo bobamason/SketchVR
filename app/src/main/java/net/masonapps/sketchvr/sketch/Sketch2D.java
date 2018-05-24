@@ -2,17 +2,26 @@ package net.masonapps.sketchvr.sketch;
 
 import android.support.annotation.Nullable;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+
+import net.masonapps.sketchvr.ui.ShapeRenderableInput;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.LinearRing;
+import org.locationtech.jts.geom.util.LineStringExtracter;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
+import org.masonapps.libgdxgooglevr.math.PlaneUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -21,12 +30,19 @@ import java.util.stream.Collectors;
 /**
  * Created by Bob Mason on 5/4/2018.
  */
-public class Sketch2D {
+public class Sketch2D implements ShapeRenderableInput {
 
     private static final float EPSILON = 1e-3f;
     private final GeometryFactory geometryFactory = new GeometryFactory();
+    private final Plane plane;
     @Nullable
-    private Geometry nodedLines;
+    private Geometry nodedGeometry;
+    private List lines = new ArrayList();
+    private List<RenderLine> renderLines = new ArrayList<>();
+
+    public Sketch2D(Plane plane) {
+        this.plane = plane;
+    }
 
     public void addRect(Rectangle rect) {
         addRing(new Coordinate[]{
@@ -97,29 +113,75 @@ public class Sketch2D {
     }
 
     private void addGeometry(Geometry g) {
-        if (nodedLines == null)
-            nodedLines = g;
+        if (nodedGeometry == null)
+            nodedGeometry = g;
         else
-            nodedLines = nodedLines.union(g);
+            nodedGeometry = nodedGeometry.union(g);
+        updateRenderLines();
     }
 
     @Nullable
     public Collection getPolygons() {
-        if (nodedLines == null) return null;
+        if (nodedGeometry == null) return null;
         Polygonizer polygonizer = new Polygonizer(true);
-        polygonizer.add(nodedLines);
+        polygonizer.add(nodedGeometry);
         return polygonizer.getPolygons();
     }
 
     @Nullable
     public Collection getBufferPolygons(float distance) {
-        if (nodedLines == null) return null;
+        if (nodedGeometry == null) return null;
         Polygonizer polygonizer = new Polygonizer(true);
-        polygonizer.add(nodedLines.buffer(distance, 4));
+        polygonizer.add(nodedGeometry.copy().buffer(distance, 4));
         return polygonizer.getPolygons();
     }
 
+    @Nullable
+    public Geometry getNodedGeometry() {
+        return nodedGeometry;
+    }
+
     public void clear() {
-        nodedLines = null;
+        nodedGeometry = null;
+    }
+
+    @Override
+    public void draw(ShapeRenderer renderer) {
+        if (renderLines.isEmpty()) return;
+        renderer.setColor(Color.GREEN);
+        for (RenderLine renderLine : renderLines) {
+            renderer.line(renderLine.v1, renderLine.v2);
+        }
+    }
+
+    private void updateRenderLines() {
+        if (nodedGeometry != null) {
+            renderLines.clear();
+            lines.clear();
+            LineStringExtracter.getLines(nodedGeometry, lines);
+            for (Object o : lines) {
+                if (o instanceof LineString) {
+                    final LineString line = (LineString) o;
+                    final int n = line.getNumPoints();
+                    for (int i = 0; i < n - 1; i++) {
+                        renderLines.add(new RenderLine(line.getCoordinateN(i), line.getCoordinateN(i + 1)));
+                    }
+                }
+            }
+        }
+    }
+
+    private class RenderLine {
+        final Vector2 p1 = new Vector2();
+        final Vector2 p2 = new Vector2();
+        final Vector3 v1 = new Vector3();
+        final Vector3 v2 = new Vector3();
+
+        public RenderLine(Coordinate c1, Coordinate c2) {
+            p1.set((float) c1.x, (float) c1.y);
+            p2.set((float) c2.x, (float) c2.y);
+            PlaneUtils.toSpace(plane, p1, v1);
+            PlaneUtils.toSpace(plane, p2, v2);
+        }
     }
 }

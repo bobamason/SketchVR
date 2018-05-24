@@ -1,4 +1,4 @@
-package net.masonapps.sketchvr.modeling.ui;
+package net.masonapps.sketchvr.ui;
 
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 

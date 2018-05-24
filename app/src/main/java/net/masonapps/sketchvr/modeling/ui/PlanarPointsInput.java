@@ -32,7 +32,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     private final Plane plane = new Plane();
     private final Array<Vector3> points = new Array<>();
     private final Vector2 hitPoint2D = new Vector2();
-    private final Sketch2D sketch2D = new Sketch2D();
+    private final Sketch2D sketch2D = new Sketch2D(plane);
     private final Vector3 point = new Vector3();
     private final Vector3 hitPoint3D = new Vector3();
     private final SketchMeshBuilder builder;
@@ -88,16 +88,14 @@ public class PlanarPointsInput extends ModelingInputProcessor {
 
     @Override
     public void draw(ShapeRenderer shapeRenderer) {
-        if (sketch2D.points.isEmpty()) return;
+        if (points.size == 0) return;
         shapeRenderer.setColor(Color.GREEN);
-        final Vector3 p1 = new Vector3();
-        final Vector3 p2 = new Vector3();
-        for (int i = 0; i < sketch2D.points.size(); i++) {
-            if (i == sketch2D.points.size() - 1) {
+        for (int i = 0; i < points.size; i++) {
+            if (i == points.size - 1) {
                 if (isCursorOver)
-                    shapeRenderer.line(PlaneUtils.toSpace(plane, sketch2D.points.get(i), p1), point);
+                    shapeRenderer.line(points.get(i), point);
             } else {
-                shapeRenderer.line(PlaneUtils.toSpace(plane, sketch2D.points.get(i), p1), PlaneUtils.toSpace(plane, sketch2D.points.get(i + 1), p2));
+                shapeRenderer.line(points.get(i), points.get(i + 1));
             }
         }
         shapeRenderer.setColor(Color.WHITE);
@@ -134,7 +132,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             sketch2D.clear();
             return;
         }
-        sketch2D.closePath();
+        sketch2D.addLine(lastPoint, PlaneUtils.toSubSpace(plane, point, hitPoint2D));
         builder.begin();
         final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
 

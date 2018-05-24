@@ -13,7 +13,7 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 
 import net.masonapps.sketchvr.modeling.SketchNode;
-import net.masonapps.sketchvr.modeling.ui.RenderableInput;
+import net.masonapps.sketchvr.ui.RenderableInput;
 
 import org.masonapps.libgdxgooglevr.gfx.Transformable;
 import org.masonapps.libgdxgooglevr.input.VrInputProcessor;

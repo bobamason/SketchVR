@@ -17,6 +17,7 @@ import com.google.vr.sdk.controller.Controller;
 
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
+import net.masonapps.sketchvr.ui.RenderableInput;
 
 import org.masonapps.libgdxgooglevr.input.DaydreamButtonEvent;
 import org.masonapps.libgdxgooglevr.input.DaydreamTouchEvent;
