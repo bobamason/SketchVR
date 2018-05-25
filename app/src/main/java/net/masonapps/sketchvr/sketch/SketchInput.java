@@ -44,6 +44,7 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
     @Override
     public void recalculateTransform() {
         PlaneUtils.getToSpaceMatrix(getPlane(), transform);
+        transform.mulLeft(project.getTransform());
 
         final float hw = getViewport().getCamera().viewportWidth * pixelSizeWorld / 2f;
         final float hh = getViewport().getCamera().viewportHeight * pixelSizeWorld / 2f;
