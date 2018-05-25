@@ -55,6 +55,7 @@ import net.masonapps.sketchvr.modeling.ui.ModelingInputProcessor;
 import net.masonapps.sketchvr.modeling.ui.MultiNodeSelector;
 import net.masonapps.sketchvr.modeling.ui.PlanarPointsInput;
 import net.masonapps.sketchvr.modeling.ui.SingleNodeSelector;
+import net.masonapps.sketchvr.sketch.SketchInput;
 import net.masonapps.sketchvr.ui.ExportDialog;
 import net.masonapps.sketchvr.ui.GroupCompleteDialog;
 import net.masonapps.sketchvr.ui.RenderableInput;
@@ -95,6 +96,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private final Entity gradientBackground;
     private final ExportDialog exportDialog;
     private final PlanarPointsInput planarPointsInput;
+    private final SketchInput sketchInput;
     private TransformWidget3D transformUI;
     private float projectScale = 1f;
     private String projectName;
@@ -347,9 +349,11 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
         // TODO: 3/23/2018 remove test 
         planarPointsInput = new PlanarPointsInput(project, point -> Logger.d("point added " + point));
+        sketchInput = new SketchInput(project, spriteBatch, skin);
         planarPointsInput.getPlane().set(Vector3.Zero, Vector3.Z);
+        sketchInput.setPlane(Vector3.Zero, Vector3.Z);
         singleNodeSelector = new SingleNodeSelector(project, this::setSelectedNode);
-        inputProcessorChooser.setActiveProcessor(planarPointsInput);
+        inputProcessorChooser.setActiveProcessor(sketchInput);
 
         inputMultiplexer = new VrInputMultiplexer(inputProcessorChooser, mainInterface);
     }

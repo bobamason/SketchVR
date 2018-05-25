@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
@@ -32,14 +31,12 @@ public class Sketch2D implements ShapeRenderableInput {
 
     private static final float EPSILON = 1e-3f;
     private final GeometryFactory geometryFactory = new GeometryFactory();
-    private final Plane plane;
     @Nullable
     private Geometry nodedGeometry;
     private List lines = new ArrayList();
     private List<RenderLine> renderLines = new ArrayList<>();
 
-    public Sketch2D(Plane plane) {
-        this.plane = plane;
+    public Sketch2D() {
     }
 
     public void addRect(Rectangle rect) {

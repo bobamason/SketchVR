@@ -4,7 +4,9 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
@@ -36,7 +38,7 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
         super(batch, 1000, 1000);
         this.project = project;
         this.builder = project.getBuilder();
-        sketch2D = new Sketch2D(getPlane());
+        sketch2D = new Sketch2D();
     }
 
     @Override
@@ -76,7 +78,6 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        isDrawing = false;
         return isCursorOver;
     }
 
@@ -93,6 +94,10 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
 
     @Override
     public boolean onBackButtonClicked() {
+        if (isDrawing) {
+            isDrawing = false;
+            buildMesh();
+        }
         return false;
     }
 
@@ -116,5 +121,20 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
             final SketchNode node = new SketchNode(meshPart);
             project.add(node, true);
         }
+    }
+
+    public void setPlane(Vector3 point, Vector3 normal) {
+        getPlane().set(point, normal);
+        recalculateTransform();
+    }
+
+    public void setPlane(Plane plane) {
+        getPlane().set(plane);
+        recalculateTransform();
+    }
+
+    public void setPlane(Vector3 p1, Vector3 p2, Vector3 p3) {
+        getPlane().set(p1, p2, p3);
+        recalculateTransform();
     }
 }
