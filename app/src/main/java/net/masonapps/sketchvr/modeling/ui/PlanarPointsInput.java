@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -40,6 +41,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     protected boolean isCursorOver = false;
     private Ray transformedRay = new Ray();
     private Vector2 lastPoint = new Vector2();
+    private final Matrix4 tmpM = new Matrix4();
 
     public PlanarPointsInput(SketchProjectEntity project, OnPointAddedListener listener) {
         super(project);
@@ -89,23 +91,16 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     @Override
     public void draw(ShapeRenderer shapeRenderer) {
         if (points.size == 0) return;
-        shapeRenderer.setColor(Color.GREEN);
-        for (int i = 0; i < points.size; i++) {
-            if (i == points.size - 1) {
-                if (isCursorOver)
-                    shapeRenderer.line(points.get(i), point);
-            } else {
-                shapeRenderer.line(points.get(i), points.get(i + 1));
-            }
-        }
         shapeRenderer.setColor(Color.WHITE);
-
         final float r = 0.05f;
         final float d = 2f * r;
 //        points.forEach(p -> shapeRenderer.box(p.x - r, p.y - r, p.z + r, d, d, d));
 
         if (isCursorOver)
             shapeRenderer.box(point.x - r, point.y - r, point.z - r, d, d, d);
+
+        shapeRenderer.setColor(Color.GREEN);
+        shapeRenderer.setTransformMatrix(PlaneUtils.getToSpaceMatrix(plane, tmpM));
     }
 
     @Override
