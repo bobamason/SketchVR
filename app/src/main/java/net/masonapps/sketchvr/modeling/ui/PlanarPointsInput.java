@@ -33,7 +33,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     private final Plane plane = new Plane();
     private final Array<Vector3> points = new Array<>();
     private final Vector2 hitPoint2D = new Vector2();
-    private final Sketch2D sketch2D = new Sketch2D(plane);
+    private final Sketch2D sketch2D = new Sketch2D();
     private final Vector3 point = new Vector3();
     private final Vector3 hitPoint3D = new Vector3();
     private final SketchMeshBuilder builder;
