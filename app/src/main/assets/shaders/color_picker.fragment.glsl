@@ -9,7 +9,7 @@ precision highp float;
 #define HIGH
 #endif
 
-define PI 3.14159265
+#define PI 3.14159265
 
 uniform sampler2D u_texture;
 varying vec2 v_texCoord0;
@@ -39,5 +39,5 @@ void main(){
         discard;
     float a = atan(tc.y, tc.x);
     vec3 hsv = vec3((a + PI) / (2.0 * PI), r, 1.0);
-    gl_FragColor = v_color * vec4(hsv2rgb(hsv, 1.0));
+    gl_FragColor = v_color * vec4(hsv2rgb(hsv), 1.0);
 }
