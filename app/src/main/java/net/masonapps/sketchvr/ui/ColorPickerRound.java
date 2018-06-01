@@ -23,6 +23,8 @@ import com.badlogic.gdx.utils.Align;
 
 import net.masonapps.sketchvr.Style;
 
+import org.masonapps.libgdxgooglevr.utils.Logger;
+
 import java.util.function.Consumer;
 
 /**
@@ -105,7 +107,17 @@ public class ColorPickerRound extends Group {
         ColorCircle(Drawable drawable) {
             super(drawable);
             setTouchable(Touchable.enabled);
-            shader = new ShaderProgram(SpriteBatch.createDefaultShader().getVertexShaderSource(), Gdx.files.internal("shaders/color_picker.fragment.glsl").readString());
+            final String vertexShader = SpriteBatch.createDefaultShader().getVertexShaderSource();
+            final String fragmentShader = Gdx.files.internal("shaders/color_picker.fragment.glsl").readString();
+            shader = new ShaderProgram(vertexShader, fragmentShader);
+
+            Logger.d("vertex shader source:\n" + shader.getVertexShaderSource());
+            Logger.d("fragment shader source:\n" + shader.getFragmentShaderSource());
+            Logger.d("shader compiled = " + shader.isCompiled());
+            if (!shader.getLog().isEmpty()) {
+                Logger.e("shader error:\n" + shader.getLog());
+            }
+            
             addListener(new InputListener() {
                 @Override
                 public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {

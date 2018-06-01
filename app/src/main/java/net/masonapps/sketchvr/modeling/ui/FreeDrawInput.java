@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Plane;
-import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -21,6 +20,7 @@ import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.sketch.Sketch2D;
 
 import org.locationtech.jts.geom.Polygon;
+import org.masonapps.libgdxgooglevr.GdxVr;
 import org.masonapps.libgdxgooglevr.math.PlaneUtils;
 
 import java.util.Collection;
@@ -29,7 +29,7 @@ import java.util.Collection;
  * Created by Bob Mason on 3/22/2018.
  */
 
-public class PlanarPointsInput extends ModelingInputProcessor {
+public class FreeDrawInput extends ModelingInputProcessor {
 
     private final Plane plane = new Plane();
     private final Array<Vector3> points = new Array<>();
@@ -39,12 +39,14 @@ public class PlanarPointsInput extends ModelingInputProcessor {
     private final Vector3 hitPoint3D = new Vector3();
     private final SketchMeshBuilder builder;
     private final OnPointAddedListener listener;
+    private final Matrix4 tmpM = new Matrix4();
     protected boolean isCursorOver = false;
+    private float distance = 3f;
     private Ray transformedRay = new Ray();
     private Vector2 lastPoint = new Vector2();
-    private final Matrix4 tmpM = new Matrix4();
+    private boolean isTouchDown = false;
 
-    public PlanarPointsInput(SketchProjectEntity project, OnPointAddedListener listener) {
+    public FreeDrawInput(SketchProjectEntity project, OnPointAddedListener listener) {
         super(project);
         this.builder = project.getBuilder();
         this.listener = listener;
@@ -68,7 +70,18 @@ public class PlanarPointsInput extends ModelingInputProcessor {
         isCursorOver = Intersector.intersectRayPlane(transformedRay, plane, point);
         if (isCursorOver && points.size > 1 && point.dst(points.get(0)) < 0.1f)
             point.set(points.get(0));
-        if (isCursorOver) hitPoint3D.set(point).mul(project.getTransform());
+        if (isCursorOver) {
+            hitPoint3D.set(point).mul(project.getTransform());
+            if (isTouchDown) {
+                final Vector3 cpy = point.cpy();
+                points.add(cpy);
+                listener.pointAdded(cpy);
+                PlaneUtils.toSubSpace(plane, cpy, hitPoint2D);
+                if (points.size >= 2)
+                    sketch2D.addLine(lastPoint.cpy(), hitPoint2D.cpy());
+                lastPoint.set(hitPoint2D);
+            }
+        }
         return isCursorOver;
     }
 
@@ -96,36 +109,23 @@ public class PlanarPointsInput extends ModelingInputProcessor {
         shapeRenderer.setColor(Color.WHITE);
         final float r = 0.05f;
         final float d = 2f * r;
-        points.forEach(p -> shapeRenderer.box(p.x - r, p.y - r, p.z + r, d, d, d));
+//        points.forEach(p -> shapeRenderer.box(p.x - r, p.y - r, p.z + r, d, d, d));
 
         if (isCursorOver)
             shapeRenderer.box(point.x - r, point.y - r, point.z - r, d, d, d);
 
         shapeRenderer.setColor(Color.GREEN);
-//        shapeRenderer.setTransformMatrix(PlaneUtils.getToSpaceMatrix(plane, tmpM));
-//        sketch2D.draw(shapeRenderer);
-        for (int i = 0; i < points.size; i++) {
-            if (i == points.size - 1)
-                shapeRenderer.line(points.get(i), point);
-            else
-                shapeRenderer.line(points.get(i), points.get(i + 1));
-        }
+        shapeRenderer.setTransformMatrix(PlaneUtils.getToSpaceMatrix(plane, tmpM));
+        sketch2D.draw(shapeRenderer);
     }
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         if (isCursorOver) {
-            final Vector3 cpy = point.cpy();
-            if (points.size > 1 && cpy.epsilonEquals(points.get(0), 0.001f)) {
-                closePath();
-            } else {
-                points.add(cpy);
-                listener.pointAdded(cpy);
-                PlaneUtils.toSubSpace(plane, cpy, hitPoint2D);
-                if (points.size >= 2)
-                    sketch2D.addLine(lastPoint.cpy(), hitPoint2D.cpy());
-                lastPoint.set(hitPoint2D);
-            }
+            final Vector3 dir = GdxVr.input.getInputRay().direction.cpy();
+            final Vector3 p = GdxVr.input.getInputRay().origin.cpy().add(dir).nor().scl(distance);
+            plane.set(p, dir.set(p).nor().scl(-1));
+            isTouchDown = true;
         }
         return isCursorOver;
     }
@@ -143,7 +143,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
         final Collection polygons = sketch2D.getPolygons();
         for (Object poly : polygons) {
             if (poly instanceof Polygon)
-                builder.polygonExtruded((Polygon) poly, new Plane(Vector3.Z, 0), 0.12f);
+                builder.polygonExtruded((Polygon) poly, plane, 0.12f);
         }
 
         builder.end();
@@ -151,25 +151,13 @@ public class PlanarPointsInput extends ModelingInputProcessor {
         sketch2D.clear();
         if (meshPart.mesh.getNumVertices() > 3) {
             final SketchNode node = new SketchNode(meshPart);
-            PlaneUtils.getToSpaceMatrix(plane, tmpM);
-            node.translate(tmpM.getTranslation(new Vector3()));
-            node.setRotation(tmpM.getRotation(new Quaternion()));
             project.add(node, true);
         }
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        return isCursorOver;
-    }
-
-    @Override
-    public boolean touchDragged(int screenX, int screenY, int pointer) {
-        return isCursorOver;
-    }
-
-    @Override
-    public boolean onBackButtonClicked() {
+        isTouchDown = false;
         if (points.size >= 2) {
             builder.begin();
             final MeshPart meshPart = builder.part("p", GL20.GL_TRIANGLES);
@@ -177,7 +165,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             final Collection polygons = sketch2D.getBufferPolygons(0.06f);
             for (Object poly : polygons) {
                 if (poly instanceof Polygon)
-                    builder.polygonExtruded((Polygon) poly, new Plane(Vector3.Z, 0), 0.12f);
+                    builder.polygonExtruded((Polygon) poly, plane, 0.12f);
             }
 
             builder.end();
@@ -185,14 +173,15 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             sketch2D.clear();
             if (meshPart.mesh.getNumVertices() > 3) {
                 final SketchNode node = new SketchNode(meshPart);
-                PlaneUtils.getToSpaceMatrix(plane, tmpM);
-                node.translate(tmpM.getTranslation(new Vector3()));
-                node.setRotation(tmpM.getRotation(new Quaternion()));
                 project.add(node, true);
             }
-            return true;
         }
-        return false;
+        return isCursorOver;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        return isCursorOver;
     }
 
     public interface OnPointAddedListener {

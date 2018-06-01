@@ -47,8 +47,10 @@ import net.masonapps.sketchvr.modeling.transform.ScaleWidget;
 import net.masonapps.sketchvr.modeling.transform.SimpleGrabControls;
 import net.masonapps.sketchvr.modeling.transform.TransformWidget3D;
 import net.masonapps.sketchvr.modeling.transform.TranslateWidget;
+import net.masonapps.sketchvr.modeling.ui.AddPlaneInput;
 import net.masonapps.sketchvr.modeling.ui.DuplicateNodeInput;
 import net.masonapps.sketchvr.modeling.ui.EditModeTable;
+import net.masonapps.sketchvr.modeling.ui.FreeDrawInput;
 import net.masonapps.sketchvr.modeling.ui.InputProcessorChooser;
 import net.masonapps.sketchvr.modeling.ui.MainInterface;
 import net.masonapps.sketchvr.modeling.ui.ModelingInputProcessor;
@@ -97,6 +99,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private final ExportDialog exportDialog;
     private final PlanarPointsInput planarPointsInput;
     private final SketchInput sketchInput;
+    private final AddPlaneInput addPlaneInput;
     private TransformWidget3D transformUI;
     private float projectScale = 1f;
     private String projectName;
@@ -200,7 +203,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
             @Override
             public void onAddClicked(String key) {
-                // TODO: 4/25/2018 start new mesh 
+                inputProcessorChooser.setActiveProcessor(addPlaneInput);
             }
 
             @Override
@@ -353,7 +356,13 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         planarPointsInput.getPlane().set(Vector3.Zero, Vector3.Z);
         sketchInput.setPlane(Vector3.Zero, Vector3.Z);
         singleNodeSelector = new SingleNodeSelector(project, this::setSelectedNode);
-        inputProcessorChooser.setActiveProcessor(sketchInput);
+        final FreeDrawInput freeDrawInput = new FreeDrawInput(project, point -> Logger.d("point added " + point));
+
+        addPlaneInput = new AddPlaneInput(project, plane -> {
+            planarPointsInput.getPlane().set(plane);
+            inputProcessorChooser.setActiveProcessor(planarPointsInput);
+        });
+        inputProcessorChooser.setActiveProcessor(addPlaneInput);
 
         inputMultiplexer = new VrInputMultiplexer(inputProcessorChooser, mainInterface);
     }
@@ -539,6 +548,11 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         shapeRenderer.begin();
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.setTransformMatrix(project.getTransform());
+        if (selectedNode != null) {
+            shapeRenderer.setColor(Color.LIGHT_GRAY);
+            final BoundingBox bb = selectedNode.getAABB();
+            shapeRenderer.box(bb.min.x, bb.min.y, bb.min.z, bb.getWidth(), bb.getHeight(), bb.getDepth());
+        }
 //        AABBTree.debugAABBTree(shapeRenderer, project.getAABBTree(), Color.YELLOW);
         transformUI.drawShapes(shapeRenderer);
 

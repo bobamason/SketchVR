@@ -497,8 +497,8 @@ public class VrAndroidInput implements Input {
         } else {
             isControllerConnected = false;
         }
-        daydreamControllerHandler.process(controller, connectionState);
         processEvents();
+        daydreamControllerHandler.process(controller, connectionState);
     }
 
     private void postTouchEvent(int type, int x, int y) {

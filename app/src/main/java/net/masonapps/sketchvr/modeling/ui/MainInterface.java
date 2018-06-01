@@ -62,6 +62,7 @@ public class MainInterface extends CylindricalWindowUiContainer {
         editModeTable.setListener(this::editModeChanged);
         initMainTable();
         initConfirmDialog();
+        initColorPicker();
 //        initViewControls();
     }
 
