@@ -39,6 +39,7 @@ import net.masonapps.sketchvr.actions.TransformAction;
 import net.masonapps.sketchvr.actions.UndoRedoCache;
 import net.masonapps.sketchvr.controller.ViewControlsVirtualStage;
 import net.masonapps.sketchvr.environment.Grid;
+import net.masonapps.sketchvr.modeling.CSG;
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
@@ -362,9 +363,12 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             planarPointsInput.getPlane().set(plane);
             inputProcessorChooser.setActiveProcessor(planarPointsInput);
         });
-        inputProcessorChooser.setActiveProcessor(addPlaneInput);
+        inputProcessorChooser.setActiveProcessor(singleNodeSelector);
 
         inputMultiplexer = new VrInputMultiplexer(inputProcessorChooser, mainInterface);
+
+        // TODO: 6/15/2018 remove csg test 
+        project.add(CSG.test(sketchMeshBuilder), true);
     }
 
     private static Model createGrid(ModelBuilder builder, Skin skin, float radius) {
