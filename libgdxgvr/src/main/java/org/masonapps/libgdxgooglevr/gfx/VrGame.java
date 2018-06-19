@@ -294,4 +294,8 @@ public class VrGame extends VrApplicationAdapter {
     public VrCursor getCursor() {
         return cursor;
     }
+
+    public ShapeRenderer getShapeRenderer() {
+        return shapeRenderer;
+    }
 }

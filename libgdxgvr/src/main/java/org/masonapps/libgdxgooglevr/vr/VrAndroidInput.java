@@ -1,8 +1,6 @@
 package org.masonapps.libgdxgooglevr.vr;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Vibrator;
 import android.view.View;
 
 import com.badlogic.gdx.Input;
@@ -33,7 +31,7 @@ public class VrAndroidInput implements Input {
     public static final int SUPPORTED_KEYS = 260;
     private final VrActivity.VrApplication app;
     private final ArmModel armModel;
-    private final Vibrator vibrator;
+    //    private final Vibrator vibrator;
     protected Quaternion controllerOrientation = new Quaternion();
     protected boolean isControllerConnected = false;
     private Vector3 controllerPosition = new Vector3();
@@ -74,7 +72,7 @@ public class VrAndroidInput implements Input {
         daydreamControllerHandler = new DaydreamControllerHandler();
         app = application;
         armModel = ArmModel.getInstance();
-        vibrator = (Vibrator) contextRef.get().getSystemService(Context.VIBRATOR_SERVICE);
+//        vibrator = (Vibrator) contextRef.get().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @Override
@@ -337,22 +335,19 @@ public class VrAndroidInput implements Input {
         this.catchMenu = catchMenu;
     }
 
-    @SuppressLint("MissingPermission")
     @Override
     public void vibrate(int milliseconds) {
-        vibrator.vibrate(milliseconds);
+//        vibrator.vibrate(milliseconds);
     }
 
-    @SuppressLint("MissingPermission")
     @Override
     public void vibrate(long[] pattern, int repeat) {
-        vibrator.vibrate(pattern, repeat);
+//        vibrator.vibrate(pattern, repeat);
     }
 
-    @SuppressLint("MissingPermission")
     @Override
     public void cancelVibrate() {
-        vibrator.cancel();
+//        vibrator.cancel();
     }
 
     @Override
@@ -413,8 +408,8 @@ public class VrAndroidInput implements Input {
         if (peripheral == Peripheral.Gyroscope) return false;
         if (peripheral == Peripheral.Compass) return false;
         if (peripheral == Peripheral.OnscreenKeyboard) return true;
-        if (peripheral == Peripheral.Vibrator)
-            return (vibrator != null) ? vibrator.hasVibrator() : vibrator != null;
+//        if (peripheral == Peripheral.Vibrator)
+//            return (vibrator != null) ? vibrator.hasVibrator() : vibrator != null;
         return false;
     }
 
