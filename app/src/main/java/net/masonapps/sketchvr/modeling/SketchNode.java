@@ -232,7 +232,7 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
 
     public void validate() {
         if (!updated)
-            calculateTransforms(true);
+            calculateTransforms(false);
     }
 
     public void invalidate() {
