@@ -23,16 +23,14 @@ import java.util.List;
 public class SketchProjectEntity extends Entity {
 
     private final AABBTree aabbTree;
-    private final SketchMeshBuilder builder;
 
-    public SketchProjectEntity(SketchMeshBuilder builder) {
-        this(builder, null);
+    public SketchProjectEntity() {
+        this(null);
     }
 
     @SuppressWarnings("ConstantConditions")
-    public SketchProjectEntity(SketchMeshBuilder builder, @Nullable List<SketchNode> nodes) {
+    public SketchProjectEntity(@Nullable List<SketchNode> nodes) {
         super(new ModelInstance(new Model()));
-        this.builder = builder;
         aabbTree = new AABBTree();
         if (nodes != null && !nodes.isEmpty()) {
             for (SketchNode node : nodes) {
@@ -125,9 +123,5 @@ public class SketchProjectEntity extends Entity {
 
     public AABBTree getAABBTree() {
         return aabbTree;
-    }
-
-    public SketchMeshBuilder getBuilder() {
-        return builder;
     }
 }

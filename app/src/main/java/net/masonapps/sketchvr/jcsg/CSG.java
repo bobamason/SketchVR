@@ -172,7 +172,7 @@ public class CSG {
         }
 
         csg.polygons = polygonStream.
-                map((Polygon p) -> p.clone()).collect(Collectors.toList());
+                map(Polygon::clone).collect(Collectors.toList());
 
         return csg;
     }

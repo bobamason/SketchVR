@@ -20,7 +20,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -40,7 +39,6 @@ import net.masonapps.sketchvr.actions.UndoRedoCache;
 import net.masonapps.sketchvr.controller.ViewControlsVirtualStage;
 import net.masonapps.sketchvr.environment.Grid;
 import net.masonapps.sketchvr.modeling.CSGTest;
-import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.modeling.transform.RotateWidget;
@@ -60,7 +58,6 @@ import net.masonapps.sketchvr.modeling.ui.PlanarPointsInput;
 import net.masonapps.sketchvr.modeling.ui.SingleNodeSelector;
 import net.masonapps.sketchvr.sketch.SketchInput;
 import net.masonapps.sketchvr.ui.ExportDialog;
-import net.masonapps.sketchvr.ui.GroupCompleteDialog;
 import net.masonapps.sketchvr.ui.RenderableInput;
 import net.masonapps.sketchvr.ui.ShapeRenderableInput;
 
@@ -95,7 +92,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private final TranslateWidget translateWidget;
     private final RotateWidget rotateWidget;
     private final ScaleWidget scaleWidget;
-    private final GroupCompleteDialog groupDialog;
     private final Entity gradientBackground;
     private final ExportDialog exportDialog;
     private final PlanarPointsInput planarPointsInput;
@@ -104,7 +100,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private TransformWidget3D transformUI;
     private float projectScale = 1f;
     private String projectName;
-    private final SketchMeshBuilder sketchMeshBuilder;
     @Nullable
     private SketchNode focusedNode = null;
     @Nullable
@@ -142,8 +137,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         gridFloor = new Grid(2, skin.getRegion(Style.Drawables.grid), Color.LIGHT_GRAY);
 
         setBackgroundColor(Color.SKY);
-        sketchMeshBuilder = new SketchMeshBuilder();
-        project = new SketchProjectEntity(sketchMeshBuilder, nodeList);
+        project = new SketchProjectEntity(nodeList);
         undoRedoCache = new UndoRedoCache();
 
         final ModelBuilder modelBuilder = new ModelBuilder();
@@ -255,31 +249,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             public void onExportClicked() {
                 exportDialog.show();
             }
-
-            @Override
-            public void onGroupClicked() {
-                groupDialog.show();
-                inputProcessorChooser.setActiveProcessor(multiNodeSelector);
-            }
-
-            @Override
-            public void onUnGroupClicked() {
-                if (selectedNode != null && selectedNode.isGroup()) {
-                    project.remove(selectedNode);
-                    final int n = selectedNode.getChildCount();
-                    for (int i = 0; i < n; i++) {
-                        final Node child = selectedNode.getChild(i);
-                        if (child instanceof SketchNode) {
-                            final SketchNode sketchNode = (SketchNode) child;
-                            sketchNode.translation.mul(selectedNode.localTransform);
-                            sketchNode.rotation.mulLeft(selectedNode.rotation);
-                            sketchNode.scale.scl(selectedNode.scale);
-                            sketchNode.invalidate();
-                            project.add(sketchNode, true);
-                        }
-                    }
-                }
-            }
         };
         mainInterface = new MainInterface(spriteBatch, skin, uiEventListener);
         mainInterface.loadWindowPositions(PreferenceManager.getDefaultSharedPreferences(GdxVr.app.getContext()));
@@ -317,27 +286,6 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 //            }
 //        });
 
-        groupDialog = new GroupCompleteDialog(spriteBatch, skin, new GroupCompleteDialog.GroupDialogListener() {
-            @Override
-            public void onCancelClicked() {
-                multiSelectNodes.clear();
-            }
-
-            @Override
-            public void onDoneClicked() {
-                final SketchNode group = new SketchNode();
-                for (SketchNode node : multiSelectNodes) {
-                    project.remove(node);
-                    group.addChild(node);
-                }
-                project.add(group, true);
-                multiSelectNodes.clear();
-            }
-        });
-        groupDialog.setPosition(0, -1f, -1.5f);
-        groupDialog.setVisible(false);
-        mainInterface.addProcessor(groupDialog);
-
         exportDialog.setVisible(false);
         mainInterface.addProcessor(exportDialog);
 
@@ -368,7 +316,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         inputMultiplexer = new VrInputMultiplexer(inputProcessorChooser, mainInterface);
 
         // TODO: 6/15/2018 remove csg test 
-        project.add(CSGTest.cubeUnionSphere(sketchMeshBuilder), true);
+        project.add(CSGTest.cubeUnionSphere(), true);
     }
 
     private static Model createGrid(ModelBuilder builder, Skin skin, float radius) {

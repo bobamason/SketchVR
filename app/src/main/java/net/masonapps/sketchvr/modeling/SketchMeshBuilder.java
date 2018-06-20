@@ -30,6 +30,14 @@ import java.util.stream.Collectors;
  * Created by Bob Mason on 5/3/2018.
  */
 public class SketchMeshBuilder extends MeshBuilder {
+
+    private static SketchMeshBuilder instance = null;
+
+    public static SketchMeshBuilder getInstance() {
+        if (instance == null)
+            instance = new SketchMeshBuilder();
+        return instance;
+    }
     private final static Vector3 vTmp = new Vector3();
     private final static Vector3 dir = new Vector3();
     private final static Vector3 dir2 = new Vector3();

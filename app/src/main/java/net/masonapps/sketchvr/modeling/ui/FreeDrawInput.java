@@ -150,7 +150,7 @@ public class FreeDrawInput extends ModelingInputProcessor {
         points.clear();
         sketch2D.clear();
         if (meshPart.mesh.getNumVertices() > 3) {
-            final SketchNode node = new SketchNode(meshPart);
+            final SketchNode node = new SketchNode(csg, meshPart);
             project.add(node, true);
         }
     }
@@ -172,7 +172,7 @@ public class FreeDrawInput extends ModelingInputProcessor {
             points.clear();
             sketch2D.clear();
             if (meshPart.mesh.getNumVertices() > 3) {
-                final SketchNode node = new SketchNode(meshPart);
+                final SketchNode node = new SketchNode(csg, meshPart);
                 project.add(node, true);
             }
         }

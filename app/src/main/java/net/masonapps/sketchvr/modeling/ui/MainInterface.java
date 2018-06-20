@@ -132,24 +132,6 @@ public class MainInterface extends CylindricalWindowUiContainer {
         });
         buttonBarTable.add(deleteBtn).padTop(PADDING).padLeft(PADDING).padBottom(PADDING).padRight(PADDING).row();
 
-        final VerticalImageTextButton groupBtn = new VerticalImageTextButton(Style.getStringResource(R.string.group, "group"), Style.createImageTextButtonStyle(skin, Style.Drawables.ic_close));
-        groupBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                eventListener.onGroupClicked();
-            }
-        });
-        buttonBarTable.add(groupBtn).padTop(PADDING).padLeft(PADDING).padBottom(PADDING).padRight(PADDING);
-
-        final VerticalImageTextButton ungroupBtn = new VerticalImageTextButton(Style.getStringResource(R.string.ungroup, "ungroup"), Style.createImageTextButtonStyle(skin, Style.Drawables.ic_close));
-        ungroupBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                eventListener.onUnGroupClicked();
-            }
-        });
-        buttonBarTable.add(ungroupBtn).padTop(PADDING).padLeft(PADDING).padBottom(PADDING).padRight(PADDING);
-
         final Container<Table> optionContainer = new Container<>();
         final Table optionsTable = new Table(skin);
         optionsTable.add(buttonBarTable).left().expandX().row();
@@ -267,9 +249,5 @@ public class MainInterface extends CylindricalWindowUiContainer {
         void onRedoClicked();
 
         void onExportClicked();
-
-        void onGroupClicked();
-
-        void onUnGroupClicked();
     }
 }

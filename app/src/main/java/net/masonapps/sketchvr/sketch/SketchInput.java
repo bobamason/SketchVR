@@ -119,7 +119,7 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
         builder.end();
         sketch2D.clear();
         if (meshPart.mesh.getNumVertices() > 3) {
-            final SketchNode node = new SketchNode(meshPart);
+            final SketchNode node = new SketchNode(csg, meshPart);
             project.add(node, true);
         }
     }

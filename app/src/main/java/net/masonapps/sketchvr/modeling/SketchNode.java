@@ -1,9 +1,9 @@
 package net.masonapps.sketchvr.modeling;
 
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
@@ -13,7 +13,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
-import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
@@ -25,18 +24,14 @@ import com.badlogic.gdx.utils.Pools;
 import net.masonapps.sketchvr.actions.TransformAction;
 import net.masonapps.sketchvr.io.Base64Utils;
 import net.masonapps.sketchvr.io.JsonUtils;
+import net.masonapps.sketchvr.jcsg.Polygon;
+import net.masonapps.sketchvr.math.ConversionUtils;
 import net.masonapps.sketchvr.mesh.MeshInfo;
-import net.masonapps.sketchvr.mesh.Triangle;
-import net.masonapps.sketchvr.mesh.Vertex;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.masonapps.libgdxgooglevr.gfx.AABBTree;
 
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,12 +39,9 @@ import java.util.List;
  */
 
 public class SketchNode extends Node implements AABBTree.AABBObject {
-
+    private static int idIndex = 0;
     public static final IntSet usedIndices = new IntSet();
-    public static final String KEY_PRIMITIVE = "primitive";
     public static final String KEY_MESH = "mesh";
-    public static final String KEY_GROUP = "group";
-    public static final String KEY_CHILDREN = "children";
     public static final String KEY_VERTEX_COUNT = "numVertices";
     public static final String KEY_VERTICES = "vertices";
     public static final String KEY_INDEX_COUNT = "numIndices";
@@ -63,7 +55,8 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     public static final String KEY_SHININESS = "shininess";
     protected final Matrix4 inverseTransform = new Matrix4();
     private final Ray transformedRay = new Ray();
-    private final boolean isGroup;
+    private final List<Polygon> polygons;
+    private final PolygonAABBTree polygonAABBTree;
     protected BoundingBox bounds = new BoundingBox();
     private boolean updated = false;
     @Nullable
@@ -73,24 +66,32 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     private Color diffuseColor = new Color(Color.GRAY);
     private Color specularColor = new Color(0x3f3f3fff);
     private float shininess = 8f;
-    private AABBTree meshAABBTree = new AABBTree();
 
-    public SketchNode() {
-        super();
-        isGroup = true;
+    public SketchNode(List<Polygon> polygons) {
+        this(polygons, Color.GRAY);
     }
 
-    public SketchNode(@NonNull MeshPart meshPart) {
-        this(meshPart, Color.GRAY);
-    }
-
-    public SketchNode(@NonNull MeshPart meshPart, Color color) {
+    public SketchNode(List<Polygon> polygons, Color color) {
         super();
-        parts.add(new NodePart(meshPart, createDefaultMaterial(color)));
-        recenter(meshPart);
-        buildMeshAABBTree(meshPart);
+        this.polygons = polygons;
+        polygonAABBTree = new PolygonAABBTree(polygons);
+        final SketchMeshBuilder builder = SketchMeshBuilder.getInstance();
+        builder.begin();
+        final MeshPart meshPart = builder.part("node" + idIndex++, GL20.GL_TRIANGLES);
+        this.polygons.forEach(p -> p.toTriangles().stream()
+                .filter(tri -> tri.isValid() && tri.vertices.size() == 3)
+                .forEach(tri -> {
+                    final Vector3 p1 = ConversionUtils.toVector3(tri.vertices.get(0).pos);
+                    final Vector3 p2 = ConversionUtils.toVector3(tri.vertices.get(1).pos);
+                    final Vector3 p3 = ConversionUtils.toVector3(tri.vertices.get(2).pos);
+                    builder.triangle(p1, p2, p3);
+                }));
+        builder.end();
+        if (meshPart.mesh.getNumVertices() > 3) {
+            parts.add(new NodePart(meshPart, createDefaultMaterial(color)));
+            recenter(meshPart);
+        }
         invalidate();
-        isGroup = false;
     }
 
 //    private void recenter(MeshPart meshPart) {
@@ -122,37 +123,6 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
 //        meshPart.mesh.updateVertices(0, new float[0]);
 //    }
 
-    private void buildMeshAABBTree(MeshPart meshPart) {
-//        usedIndices.clear();
-//        usedIndices.ensureCapacity(meshPart.size);
-        final int stride = meshPart.mesh.getVertexSize() / Float.BYTES;
-        final FloatBuffer verticesBuffer = meshPart.mesh.getVerticesBuffer();
-        final ShortBuffer indicesBuffer = meshPart.mesh.getIndicesBuffer();
-        verticesBuffer.position(0);
-        indicesBuffer.position(0);
-        final List<Vertex> vertexList = new ArrayList<>();
-        for (int i = meshPart.offset; i < meshPart.size + meshPart.offset; i++) {
-            final short index = indicesBuffer.get(i);
-            final int iv = index * stride;
-            if (usedIndices.contains(index))
-                continue;
-            final Vertex v = new Vertex();
-            v.position.x = verticesBuffer.get(iv);
-            v.position.y = verticesBuffer.get(iv + 1);
-            v.position.z = verticesBuffer.get(iv + 2);
-            vertexList.add(v);
-        }
-
-        indicesBuffer.position(0);
-        for (int i = meshPart.offset; i < meshPart.size + meshPart.offset; i += 3) {
-            final short i1 = indicesBuffer.get(i);
-            final short i2 = indicesBuffer.get(i + 1);
-            final short i3 = indicesBuffer.get(i + 2);
-            meshAABBTree.insert(new Triangle(vertexList.get(i1), vertexList.get(i2), vertexList.get(i3)));
-        }
-        usedIndices.clear();
-    }
-
     /**
      * only works when there is one mesh per node
      *
@@ -165,19 +135,9 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     }
 
     public static SketchNode fromJSONObject(JSONObject jsonObject) throws JSONException {
-        // TODO: 4/30/2018 fix load mesh 
-        final String primitiveKey = jsonObject.optString(KEY_PRIMITIVE, KEY_GROUP);
         SketchNode sketchNode = null;
 
-        if (primitiveKey.equals(KEY_GROUP)) {
-            sketchNode = new SketchNode();
-            final JSONArray children = jsonObject.getJSONArray(KEY_CHILDREN);
-            if (children != null) {
-                for (int i = 0; i < children.length(); i++) {
-                    sketchNode.addChild(fromJSONObject(children.getJSONObject(i)));
-                }
-            }
-        } else if (primitiveKey.equals(KEY_MESH) && jsonObject.has(KEY_MESH)) {
+        if (jsonObject.has(KEY_MESH)) {
             final MeshInfo meshInfo = parseMesh(jsonObject.getJSONObject(KEY_MESH));
             // TODO: 4/30/2018  
 //            sketchNode = new SketchNode(part);
@@ -214,10 +174,6 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         mesh.indices = new short[mesh.numIndices];
         Base64Utils.decodeShortArray(indexString, mesh.indices);
         return mesh;
-    }
-
-    public boolean isGroup() {
-        return isGroup;
     }
 
     protected Material createDefaultMaterial(Color color) {
@@ -264,19 +220,11 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     @Override
     public boolean rayTest(Ray ray, AABBTree.IntersectionInfo intersection) {
         validate();
-        // TODO: 4/27/2018 ray test shape or path
         boolean rayTest;
         transformedRay.set(ray).mul(inverseTransform);
-//        if (isGroup || meshAABBTree == null) {
-            rayTest = Intersector.intersectRayBounds(transformedRay, bounds, intersection.hitPoint);
-            intersection.object = this;
-//        } else
-//            rayTest = meshAABBTree.rayTest(transformedRay, intersection);
+        rayTest = polygonAABBTree.rayTest(ray, intersection);
         if (rayTest) {
             intersection.hitPoint.mul(getTransform());
-//            Logger.d("node ray test hitPoint = " + intersection.hitPoint);
-//            if (intersection.object instanceof Triangle)
-//                Logger.d("node ray test normal = " + ((Triangle) intersection.object).plane.normal);
             intersection.t = ray.origin.dst(intersection.hitPoint);
         }
         return rayTest;
@@ -299,14 +247,6 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
             inverseTransform.set(localTransform).inv();
         } catch (Exception ignored) {
         }
-        if (isGroup && getChildCount() > 0) {
-            bounds.inf();
-            final Iterable<Node> children = getChildren();
-            for (Node child : children) {
-                if (child instanceof SketchNode)
-                    bounds.ext(((SketchNode) child).getAABB());
-            }
-        }
         aabb.set(bounds).mul(localTransform);
         updated = true;
     }
@@ -315,10 +255,8 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     public SketchNode copy() {
         validate();
         final SketchNode node;
-        if (isGroup)
-            node = new SketchNode();
-        else if (parts.size > 0)
-            node = new SketchNode(parts.get(0).meshPart);
+        if (parts.size > 0)
+            node = new SketchNode(polygons);
         else
             return null;
         node.translation.set(translation);
@@ -326,13 +264,6 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         node.scale.set(scale);
         node.localTransform.set(localTransform);
         node.globalTransform.set(globalTransform);
-        if (isGroup) {
-            final Iterable<Node> children = getChildren();
-            for (Node child : children) {
-                if (child instanceof SketchNode)
-                    node.addChild(((SketchNode) child).copy());
-            }
-        }
         node.ambientColor.set(ambientColor);
         node.diffuseColor.set(diffuseColor);
         node.specularColor.set(specularColor);
@@ -403,18 +334,7 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     public JSONObject toJSONObject() throws JSONException {
         validate();
         final JSONObject jsonObject = new JSONObject();
-        jsonObject.put(KEY_PRIMITIVE, isGroup ? KEY_GROUP : KEY_MESH);
-        if (isGroup) {
-            final Iterable<Node> children = getChildren();
-            JSONArray jsonArray = new JSONArray();
-            for (Node child : children) {
-                if (child instanceof SketchNode)
-                    jsonArray.put(((SketchNode) child).toJSONObject());
-            }
-            jsonObject.put(KEY_CHILDREN, jsonArray);
-        } else {
-            jsonObject.put(KEY_MESH, meshPartToJsonObject(parts.get(0).meshPart));
-        }
+        jsonObject.put(KEY_MESH, meshPartToJsonObject(parts.get(0).meshPart));
         jsonObject.put(KEY_AMBIENT, getAmbientColor().toString());
         jsonObject.put(KEY_DIFFUSE, getDiffuseColor().toString());
         jsonObject.put(KEY_SPECULAR, getSpecularColor().toString());

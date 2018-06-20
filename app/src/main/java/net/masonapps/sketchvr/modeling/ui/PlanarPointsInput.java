@@ -150,7 +150,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
         points.clear();
         sketch2D.clear();
         if (meshPart.mesh.getNumVertices() > 3) {
-            final SketchNode node = new SketchNode(meshPart);
+            final SketchNode node = new SketchNode(csg, meshPart);
             PlaneUtils.getToSpaceMatrix(plane, tmpM);
             node.translate(tmpM.getTranslation(new Vector3()));
             node.setRotation(tmpM.getRotation(new Quaternion()));
@@ -184,7 +184,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             points.clear();
             sketch2D.clear();
             if (meshPart.mesh.getNumVertices() > 3) {
-                final SketchNode node = new SketchNode(meshPart);
+                final SketchNode node = new SketchNode(csg, meshPart);
                 PlaneUtils.getToSpaceMatrix(plane, tmpM);
                 node.translate(tmpM.getTranslation(new Vector3()));
                 node.setRotation(tmpM.getRotation(new Quaternion()));
