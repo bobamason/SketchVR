@@ -145,23 +145,14 @@ public class ProjectFileIO {
         private void parseJSONArray(ModelData data, JSONArray jsonArray, @Nullable BoundingBox outBounds) throws JSONException {
             for (int i = 0; i < jsonArray.length(); i++) {
                 final JSONObject jsonObject = jsonArray.getJSONObject(i);
-                final String primitiveKey = jsonObject.optString(SketchNode.KEY_PRIMITIVE, SketchNode.KEY_GROUP);
-                if (primitiveKey.equals(SketchNode.KEY_GROUP)) {
-                    if (jsonObject.has(SketchNode.KEY_CHILDREN)) {
-                        final JSONArray children = jsonObject.optJSONArray(SketchNode.KEY_CHILDREN);
-                        if (children != null)
-                            parseJSONArray(data, children, outBounds);
-                    }
-                } else if (primitiveKey.equals(SketchNode.KEY_MESH)) {
-                    addModelNode(data, jsonObject, outBounds);
-                }
+                addModelNode(data, jsonObject, outBounds);
             }
         }
 
         private void addModelNode(ModelData data, JSONObject jsonObject, @Nullable BoundingBox outBounds) throws JSONException {
-            if (!jsonObject.has(SketchNode.KEY_MESH)) 
+            if (!jsonObject.has(SketchNode.KEY_MESH))
                 return;
-            
+
             index++;
             ModelNode node = new ModelNode();
             final String nodeId = "node" + index;

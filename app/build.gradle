@@ -35,5 +35,5 @@ dependencies {
     implementation 'org.locationtech.jts:jts-core:1.15.0'
     implementation 'org.orbisgis:poly2tri-core:0.1.2'
     implementation 'com.github.quickhull3d:quickhull3d:1.0.0'
-    implementation group: 'eu.mihosoft.vvecmath', name: 'vvecmath', version: '0.3.8'
+    implementation 'eu.mihosoft.vvecmath:vvecmath:0.3.9'
 }

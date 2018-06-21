@@ -33,7 +33,6 @@
  */
 package net.masonapps.sketchvr.jcsg;
 
-import org.poly2tri.geometry.polygon.PolygonUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;

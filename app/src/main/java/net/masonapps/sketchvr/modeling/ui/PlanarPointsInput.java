@@ -9,14 +9,12 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Plane;
-import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
-import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.sketch.Sketch2D;
 
@@ -46,7 +44,7 @@ public class PlanarPointsInput extends ModelingInputProcessor {
 
     public PlanarPointsInput(SketchProjectEntity project, OnPointAddedListener listener) {
         super(project);
-        this.builder = project.getBuilder();
+        this.builder = SketchMeshBuilder.getInstance();
         this.listener = listener;
     }
 
@@ -150,11 +148,12 @@ public class PlanarPointsInput extends ModelingInputProcessor {
         points.clear();
         sketch2D.clear();
         if (meshPart.mesh.getNumVertices() > 3) {
-            final SketchNode node = new SketchNode(csg, meshPart);
-            PlaneUtils.getToSpaceMatrix(plane, tmpM);
-            node.translate(tmpM.getTranslation(new Vector3()));
-            node.setRotation(tmpM.getRotation(new Quaternion()));
-            project.add(node, true);
+            // TODO: 6/20/2018 fix 
+//            final SketchNode node = new SketchNode(csg, meshPart);
+//            PlaneUtils.getToSpaceMatrix(plane, tmpM);
+//            node.translate(tmpM.getTranslation(new Vector3()));
+//            node.setRotation(tmpM.getRotation(new Quaternion()));
+//            project.add(node, true);
         }
     }
 
@@ -184,11 +183,12 @@ public class PlanarPointsInput extends ModelingInputProcessor {
             points.clear();
             sketch2D.clear();
             if (meshPart.mesh.getNumVertices() > 3) {
-                final SketchNode node = new SketchNode(csg, meshPart);
-                PlaneUtils.getToSpaceMatrix(plane, tmpM);
-                node.translate(tmpM.getTranslation(new Vector3()));
-                node.setRotation(tmpM.getRotation(new Quaternion()));
-                project.add(node, true);
+                // TODO: 6/20/2018 fix 
+//                final SketchNode node = new SketchNode(csg, meshPart);
+//                PlaneUtils.getToSpaceMatrix(plane, tmpM);
+//                node.translate(tmpM.getTranslation(new Vector3()));
+//                node.setRotation(tmpM.getRotation(new Quaternion()));
+//                project.add(node, true);
             }
             return true;
         }

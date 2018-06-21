@@ -15,7 +15,6 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
-import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.sketch.Sketch2D;
 
@@ -48,7 +47,7 @@ public class FreeDrawInput extends ModelingInputProcessor {
 
     public FreeDrawInput(SketchProjectEntity project, OnPointAddedListener listener) {
         super(project);
-        this.builder = project.getBuilder();
+        this.builder = SketchMeshBuilder.getInstance();
         this.listener = listener;
     }
 
@@ -150,8 +149,9 @@ public class FreeDrawInput extends ModelingInputProcessor {
         points.clear();
         sketch2D.clear();
         if (meshPart.mesh.getNumVertices() > 3) {
-            final SketchNode node = new SketchNode(csg, meshPart);
-            project.add(node, true);
+            // TODO: 6/20/2018 fix 
+//            final SketchNode node = new SketchNode(csg, meshPart);
+//            project.add(node, true);
         }
     }
 
@@ -172,8 +172,9 @@ public class FreeDrawInput extends ModelingInputProcessor {
             points.clear();
             sketch2D.clear();
             if (meshPart.mesh.getNumVertices() > 3) {
-                final SketchNode node = new SketchNode(csg, meshPart);
-                project.add(node, true);
+                // TODO: 6/20/2018 fix 
+//                final SketchNode node = new SketchNode(csg, meshPart);
+//                project.add(node, true);
             }
         }
         return isCursorOver;

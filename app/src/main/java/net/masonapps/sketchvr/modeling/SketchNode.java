@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
@@ -222,7 +223,9 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         validate();
         boolean rayTest;
         transformedRay.set(ray).mul(inverseTransform);
-        rayTest = polygonAABBTree.rayTest(ray, intersection);
+        // TODO: 6/20/2018 fix 
+//        rayTest = polygonAABBTree.rayTest(ray, intersection);
+        rayTest = Intersector.intersectRayBounds(transformedRay, bounds, intersection.hitPoint);
         if (rayTest) {
             intersection.hitPoint.mul(getTransform());
             intersection.t = ray.origin.dst(intersection.hitPoint);

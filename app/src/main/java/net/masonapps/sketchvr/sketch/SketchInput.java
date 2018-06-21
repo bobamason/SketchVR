@@ -10,7 +10,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 import net.masonapps.sketchvr.modeling.SketchMeshBuilder;
-import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.ui.BackButtonListener;
 import net.masonapps.sketchvr.ui.ShapeRenderableInput;
@@ -37,7 +36,7 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
     public SketchInput(SketchProjectEntity project, SpriteBatch batch, Skin skin) {
         super(batch, 1000, 1000);
         this.project = project;
-        this.builder = project.getBuilder();
+        this.builder = SketchMeshBuilder.getInstance();
         sketch2D = new Sketch2D();
     }
 
@@ -119,8 +118,9 @@ public class SketchInput extends VirtualStage implements ShapeRenderableInput, B
         builder.end();
         sketch2D.clear();
         if (meshPart.mesh.getNumVertices() > 3) {
-            final SketchNode node = new SketchNode(csg, meshPart);
-            project.add(node, true);
+            // TODO: 6/20/2018 fix 
+//            final SketchNode node = new SketchNode(csg, meshPart);
+//            project.add(node, true);
         }
     }
 

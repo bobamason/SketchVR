@@ -15,7 +15,7 @@ public class ConversionUtils {
     }
 
     public static Vector3 toVector3(Vector3d v, Vector3 out) {
-        out.set((float) v.getY(), (float) v.getY(), (float) v.getZ());
+        out.set((float) v.getX(), (float) v.getY(), (float) v.getZ());
         return out;
     }
 

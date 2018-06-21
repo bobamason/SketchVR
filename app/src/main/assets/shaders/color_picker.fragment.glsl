@@ -12,7 +12,7 @@ precision highp float;
 #define PI 3.14159265
 
 uniform sampler2D u_texture;
-varying vec2 v_texCoord0;
+varying vec2 v_texCoords;
 varying LOWP vec4 v_color;
 
 vec3 hsv2rgb(vec3 c) {
@@ -33,7 +33,7 @@ vec3 rgb2hsv(vec3 c) {
 
 void main(){
     vec2 center = vec2(0.5, 0.5);
-    vec2 tc = (v_texCoord0 - center) * 2.0;
+    vec2 tc = (v_texCoords - center) * 2.0;
     float r = length(tc);
     if(r < 1.0)
         discard;

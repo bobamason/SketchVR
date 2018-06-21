@@ -106,6 +106,7 @@ public class ColorPickerRound extends Group {
 
         ColorCircle(Drawable drawable) {
             super(drawable);
+            ShaderProgram.pedantic = false;
             setTouchable(Touchable.enabled);
             final String vertexShader = SpriteBatch.createDefaultShader().getVertexShaderSource();
             final String fragmentShader = Gdx.files.internal("shaders/color_picker.fragment.glsl").readString();
