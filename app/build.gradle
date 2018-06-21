@@ -36,4 +36,5 @@ dependencies {
     implementation 'org.orbisgis:poly2tri-core:0.1.2'
     implementation 'com.github.quickhull3d:quickhull3d:1.0.0'
     implementation 'eu.mihosoft.vvecmath:vvecmath:0.3.9'
+    implementation 'org.mariuszgromada.math:MathParser.org-mXparser:4.1.1'
 }

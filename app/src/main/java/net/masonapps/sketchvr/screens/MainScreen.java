@@ -289,7 +289,11 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
         exportDialog.setVisible(false);
         mainInterface.addProcessor(exportDialog);
-        mainInterface.addProcessor(new NumberInputWindow(spriteBatch, skin, Style.createWindowVrStyle(skin)));
+
+        // TODO: 6/21/2018 remove test and make permanent 
+        final NumberInputWindow numberInputWindow = new NumberInputWindow(spriteBatch, skin, Style.createWindowVrStyle(skin));
+        numberInputWindow.setPosition(0, 0, -2);
+        mainInterface.addProcessor(numberInputWindow);
 
         inputProcessorChooser = new InputProcessorChooser();
 
