@@ -80,7 +80,7 @@ import eu.mihosoft.vvecmath.Vector3d;
  */
 public class CSG {
 
-    private static OptType defaultOptType = OptType.NONE;
+    private static OptType defaultOptType = OptType.POLYGON_BOUND;
     private List<Polygon> polygons;
     private OptType optType = null;
     private PropertyStorage storage;

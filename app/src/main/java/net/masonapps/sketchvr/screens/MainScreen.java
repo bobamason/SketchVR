@@ -58,6 +58,7 @@ import net.masonapps.sketchvr.modeling.ui.PlanarPointsInput;
 import net.masonapps.sketchvr.modeling.ui.SingleNodeSelector;
 import net.masonapps.sketchvr.sketch.SketchInput;
 import net.masonapps.sketchvr.ui.ExportDialog;
+import net.masonapps.sketchvr.ui.NumberInputWindow;
 import net.masonapps.sketchvr.ui.RenderableInput;
 import net.masonapps.sketchvr.ui.ShapeRenderableInput;
 
@@ -288,6 +289,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
 
         exportDialog.setVisible(false);
         mainInterface.addProcessor(exportDialog);
+        mainInterface.addProcessor(new NumberInputWindow(spriteBatch, skin, Style.createWindowVrStyle(skin)));
 
         inputProcessorChooser = new InputProcessorChooser();
 
@@ -316,7 +318,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         inputMultiplexer = new VrInputMultiplexer(inputProcessorChooser, mainInterface);
 
         // TODO: 6/15/2018 remove csg test 
-        project.add(CSGTest.cubeUnionSphere(), true);
+        project.add(CSGTest.cubeWithHole(), true);
     }
 
     private static Model createGrid(ModelBuilder builder, Skin skin, float radius) {

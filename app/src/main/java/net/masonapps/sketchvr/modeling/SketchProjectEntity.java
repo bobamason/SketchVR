@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.Pools;
 
 import org.masonapps.libgdxgooglevr.gfx.AABBTree;
 import org.masonapps.libgdxgooglevr.gfx.Entity;
+import org.masonapps.libgdxgooglevr.utils.Logger;
 
 import java.util.List;
 
@@ -106,6 +107,7 @@ public class SketchProjectEntity extends Entity {
         final boolean rayTest = aabbTree.rayTest(tmpRay, intersection);
         if (rayTest) {
             intersection.hitPoint.mul(transform);
+            Logger.d(intersection.toString());
         }
         Pools.free(tmpRay);
         Pools.free(tmpMat);
