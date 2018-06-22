@@ -4,8 +4,9 @@ import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
-import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
+
+import org.masonapps.libgdxgooglevr.gfx.AABBTree;
 
 /**
  * Created by Bob Mason on 3/19/2018.
@@ -15,7 +16,7 @@ public class SingleNodeSelector extends ModelingInputProcessor {
 
     private final OnNodeSelectedListener listener;
     @Nullable
-    private SketchNode selectedNode = null;
+    private AABBTree.AABBObject selectedNode = null;
 
     public SingleNodeSelector(SketchProjectEntity modelingProject, OnNodeSelectedListener listener) {
         super(modelingProject);
@@ -24,9 +25,9 @@ public class SingleNodeSelector extends ModelingInputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (isCursorOver() && intersectionInfo.object instanceof SketchNode) {
-            selectedNode = (SketchNode) intersectionInfo.object;
-            listener.nodeSelected(selectedNode);
+        if (isCursorOver()) {
+            selectedNode = intersectionInfo.object;
+            listener.objectSelected(selectedNode);
             return true;
         }
         return false;
@@ -57,6 +58,6 @@ public class SingleNodeSelector extends ModelingInputProcessor {
     }
 
     public interface OnNodeSelectedListener {
-        void nodeSelected(SketchNode node);
+        void objectSelected(AABBTree.AABBObject object);
     }
 }

@@ -38,7 +38,9 @@ import net.masonapps.sketchvr.actions.TransformAction;
 import net.masonapps.sketchvr.actions.UndoRedoCache;
 import net.masonapps.sketchvr.controller.ViewControlsVirtualStage;
 import net.masonapps.sketchvr.environment.Grid;
+import net.masonapps.sketchvr.jcsg.Polygon;
 import net.masonapps.sketchvr.modeling.CSGTest;
+import net.masonapps.sketchvr.modeling.PolygonAABBObject;
 import net.masonapps.sketchvr.modeling.SketchNode;
 import net.masonapps.sketchvr.modeling.SketchProjectEntity;
 import net.masonapps.sketchvr.modeling.transform.RotateWidget;
@@ -76,6 +78,8 @@ import org.masonapps.libgdxgooglevr.utils.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+import eu.mihosoft.vvecmath.Vector3d;
+
 /**
  * Created by Bob Mason on 12/20/2017.
  */
@@ -102,9 +106,11 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private float projectScale = 1f;
     private String projectName;
     @Nullable
-    private SketchNode focusedNode = null;
+    private SketchNode focusedPolygon = null;
     @Nullable
     private SketchNode selectedNode = null;
+    @Nullable
+    private Polygon selectedPolygon = null;
     private List<SketchNode> multiSelectNodes = new ArrayList<>();
     private SketchProjectEntity project;
     private Vector3 hitPoint = new Vector3();
@@ -112,6 +118,7 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
     private SimpleGrabControls grabControls = new SimpleGrabControls();
     private BoundingBox selectionBox = new BoundingBox();
     private Vector3 tmp = new Vector3();
+    private Vector3 tmp2 = new Vector3();
     private Vector2 vec2 = new Vector2();
     private Grid gridFloor;
     private Vector3 cameraPosition = new Vector3();
@@ -472,18 +479,20 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         return selectedNode;
     }
 
-    private void setSelectedNode(@Nullable SketchNode entity) {
-        selectedNode = entity;
-        mainInterface.setEntity(selectedNode);
-
-        if (selectedNode != null) {
-            // TODO: 5/9/2018 possibly center view on selected node or group 
-            final Color diffuseColor = selectedNode.getDiffuseColor();
-            if (diffuseColor != null)
-                mainInterface.getColorPicker().setColor(diffuseColor);
-        } else {
-            transformUI.setVisible(false);
-        }
+    private void setSelectedNode(@Nullable AABBTree.AABBObject object) {
+        if (object instanceof PolygonAABBObject)
+            selectedPolygon = ((PolygonAABBObject) object).getPolygon();
+//        selectedNode = entity;
+//        mainInterface.setEntity(selectedNode);
+//
+//        if (selectedNode != null) {
+//            // TODO: 5/9/2018 possibly center view on selected node or group 
+//            final Color diffuseColor = selectedNode.getDiffuseColor();
+//            if (diffuseColor != null)
+//                mainInterface.getColorPicker().setColor(diffuseColor);
+//        } else {
+//            transformUI.setVisible(false);
+//        }
     }
 
     @Override
@@ -510,6 +519,17 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
             shapeRenderer.setColor(Color.LIGHT_GRAY);
             final BoundingBox bb = selectedNode.getAABB();
             shapeRenderer.box(bb.min.x, bb.min.y, bb.min.z, bb.getWidth(), bb.getHeight(), bb.getDepth());
+        }
+
+        if (selectedPolygon != null) {
+            final int numVerts = selectedPolygon.vertices.size();
+            for (int i = 0; i < numVerts; i++) {
+                int j = (i + 1) % numVerts;
+                shapeRenderer.setColor(Color.CYAN);
+                final Vector3d v1 = selectedPolygon.vertices.get(i).pos;
+                final Vector3d v2 = selectedPolygon.vertices.get(j).pos;
+                shapeRenderer.line((float) v1.x(), (float) v1.y(), (float) v1.z(), (float) v2.x(), (float) v2.y(), (float) v2.z());
+            }
         }
 //        AABBTree.debugAABBTree(shapeRenderer, project.getAABBTree(), Color.YELLOW);
         transformUI.drawShapes(shapeRenderer);
