@@ -416,7 +416,7 @@ public class SolidModelingGame extends VrGame {
         imageTextButtonStyle.over = skin.newDrawable(Style.Drawables.button, Style.COLOR_OVER);
         imageTextButtonStyle.down = skin.newDrawable(Style.Drawables.button, Style.COLOR_DOWN);
         imageTextButtonStyle.checked = null;
-        imageTextButtonStyle.fontColor = Style.FONT_COLOR;
+        imageTextButtonStyle.fontColor = Style.FONT_COLOR.cpy();
         getSkin().add(Style.DEFAULT, imageTextButtonStyle, ImageTextButton.ImageTextButtonStyle.class);
 
 
@@ -426,7 +426,7 @@ public class SolidModelingGame extends VrGame {
         textButtonStyle.over = getSkin().newDrawable(Style.Drawables.button, Style.COLOR_OVER);
         textButtonStyle.down = getSkin().newDrawable(Style.Drawables.button, Style.COLOR_DOWN);
         textButtonStyle.checked = null;
-        textButtonStyle.fontColor = Style.FONT_COLOR;
+        textButtonStyle.fontColor = Style.FONT_COLOR.cpy();
         getSkin().add(Style.DEFAULT, textButtonStyle, TextButton.TextButtonStyle.class);
 
         final TextButton.TextButtonStyle toggleStyle = new TextButton.TextButtonStyle();
@@ -435,7 +435,7 @@ public class SolidModelingGame extends VrGame {
         toggleStyle.over = getSkin().newDrawable(Style.Drawables.button, Style.COLOR_OVER);
         toggleStyle.down = getSkin().newDrawable(Style.Drawables.button, Style.COLOR_DOWN);
         toggleStyle.checked = getSkin().newDrawable(Style.Drawables.button, Style.COLOR_DOWN);
-        toggleStyle.fontColor = Style.FONT_COLOR;
+        toggleStyle.fontColor = Style.FONT_COLOR.cpy();
         getSkin().add(Style.TOGGLE, toggleStyle, TextButton.TextButtonStyle.class);
 
         final TextButton.TextButtonStyle listBtnStyle = new TextButton.TextButtonStyle();
@@ -444,21 +444,21 @@ public class SolidModelingGame extends VrGame {
         listBtnStyle.over = getSkin().newDrawable(Style.Drawables.button, new Color(0.15f, 0.15f, 0.15f, 0.84706f));
         listBtnStyle.down = getSkin().newDrawable(Style.Drawables.button, Style.COLOR_DOWN);
         listBtnStyle.checked = null;
-        listBtnStyle.fontColor = Style.FONT_COLOR;
+        listBtnStyle.fontColor = Style.FONT_COLOR.cpy();
         getSkin().add(Style.LIST_ITEM, listBtnStyle, TextButton.TextButtonStyle.class);
     }
 
     private void addCheckBoxStyle() {
         final CheckBox.CheckBoxStyle checkBoxStyle = new CheckBox.CheckBoxStyle();
-        checkBoxStyle.checkboxOn = getSkin().newDrawable(Style.Drawables.checkbox_on, Style.COLOR_ACCENT);
-        checkBoxStyle.checkboxOff = getSkin().newDrawable(Style.Drawables.checkbox_off, Style.COLOR_ACCENT);
+        checkBoxStyle.checkboxOn = getSkin().newDrawable(Style.Drawables.checkbox_on, Style.COLOR_ACCENT.cpy());
+        checkBoxStyle.checkboxOff = getSkin().newDrawable(Style.Drawables.checkbox_off, Style.COLOR_ACCENT.cpy());
         checkBoxStyle.font = getSkin().getFont(Style.DEFAULT_FONT);
-        checkBoxStyle.fontColor = Style.FONT_COLOR;
+        checkBoxStyle.fontColor = Style.FONT_COLOR.cpy();
         getSkin().add(Style.DEFAULT, checkBoxStyle, CheckBox.CheckBoxStyle.class);
     }
 
     private void addLabelStyle() {
-        getSkin().add(Style.DEFAULT, new Label.LabelStyle(getSkin().getFont(Style.DEFAULT_FONT), Style.FONT_COLOR), Label.LabelStyle.class);
+        getSkin().add(Style.DEFAULT, new Label.LabelStyle(getSkin().getFont(Style.DEFAULT_FONT), Style.FONT_COLOR.cpy()), Label.LabelStyle.class);
     }
 
     public Skin getSkin() {

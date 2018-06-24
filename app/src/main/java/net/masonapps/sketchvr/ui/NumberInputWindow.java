@@ -36,7 +36,7 @@ public class NumberInputWindow extends WindowTableVR {
     }
 
     protected void addTextField(Skin skin) {
-        final TextField.TextFieldStyle textFieldStyle = new TextField.TextFieldStyle(skin.getFont(Style.DEFAULT_FONT), Color.WHITE, skin.newDrawable(Style.Drawables.white, Color.GRAY), skin.newDrawable(Style.Drawables.white, Color.BLUE), skin.newDrawable(Style.Drawables.white, Color.NAVY));
+        final TextField.TextFieldStyle textFieldStyle = new TextField.TextFieldStyle(skin.getFont(Style.DEFAULT_FONT), Color.WHITE.cpy(), skin.newDrawable(Style.Drawables.white, Color.GRAY), skin.newDrawable(Style.Drawables.white, Color.BLUE), skin.newDrawable(Style.Drawables.white, Color.NAVY));
         textField = new TextField("0.0", textFieldStyle);
         textField.setTextFieldListener((textField, c) -> {
             // TODO: 6/21/2018 add value listener 

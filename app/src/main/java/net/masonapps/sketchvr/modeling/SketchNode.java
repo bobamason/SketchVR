@@ -66,6 +66,7 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     private Color diffuseColor = new Color(Color.GRAY);
     private Color specularColor = new Color(0x3f3f3fff);
     private float shininess = 8f;
+    private Vector3 origin = new Vector3();
 
     public SketchNode(List<Polygon> polygons) {
         this(polygons, Color.GRAY);
@@ -249,6 +250,17 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         }
         aabb.set(bounds).mul(localTransform);
         updated = true;
+    }
+
+    @Override
+    public Matrix4 calculateLocalTransform() {
+        // FIXME: 6/24/2018 test to make sure it works
+        if (!isAnimated) localTransform.idt()
+                .translate(translation.x + origin.x, translation.y + origin.y, translation.z + origin.z)
+                .rotate(rotation)
+                .translate(-origin.x, -origin.y, -origin.z)
+                .scale(scale.x, scale.y, scale.z);
+        return localTransform;
     }
 
     @Override
@@ -647,6 +659,22 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
 
     public SketchNode setScale(float scale) {
         this.scale.set(scale, scale, scale);
+        invalidate();
+        return this;
+    }
+
+    public SketchNode setOrigin(float x, float y, float z) {
+        this.origin.set(x, y, z);
+        invalidate();
+        return this;
+    }
+
+    public Vector3 getOrigin() {
+        return origin;
+    }
+
+    public SketchNode setOrigin(Vector3 origin) {
+        this.origin.set(origin);
         invalidate();
         return this;
     }
