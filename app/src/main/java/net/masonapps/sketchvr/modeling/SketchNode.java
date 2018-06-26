@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
@@ -24,15 +25,11 @@ import com.badlogic.gdx.utils.Pools;
 import net.masonapps.sketchvr.actions.TransformAction;
 import net.masonapps.sketchvr.io.Base64Utils;
 import net.masonapps.sketchvr.io.JsonUtils;
-import net.masonapps.sketchvr.jcsg.Polygon;
-import net.masonapps.sketchvr.math.ConversionUtils;
 import net.masonapps.sketchvr.mesh.MeshInfo;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.masonapps.libgdxgooglevr.gfx.AABBTree;
-
-import java.util.List;
 
 /**
  * Created by Bob Mason on 2/9/2018.
@@ -55,8 +52,6 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     public static final String KEY_SHININESS = "shininess";
     protected final Matrix4 inverseTransform = new Matrix4();
     private final Ray transformedRay = new Ray();
-    private final List<Polygon> polygons;
-    private final PolygonAABBTree polygonAABBTree;
     protected BoundingBox bounds = new BoundingBox();
     private boolean updated = false;
     @Nullable
@@ -68,25 +63,16 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
     private float shininess = 8f;
     private Vector3 origin = new Vector3();
 
-    public SketchNode(List<Polygon> polygons) {
-        this(polygons, Color.GRAY);
+    public SketchNode() {
+        this(Color.GRAY);
     }
 
-    public SketchNode(List<Polygon> polygons, Color color) {
+    public SketchNode(Color color) {
         super();
-        this.polygons = polygons;
-        polygonAABBTree = new PolygonAABBTree(polygons);
         final SketchMeshBuilder builder = SketchMeshBuilder.getInstance();
+        // TODO: 6/26/2018 create mesh based on sketches
         builder.begin();
         final MeshPart meshPart = builder.part("node" + idIndex++, GL20.GL_TRIANGLES);
-        this.polygons.forEach(p -> p.toTriangles().stream()
-                .filter(tri -> tri.isValid() && tri.vertices.size() == 3)
-                .forEach(tri -> {
-                    final Vector3 p1 = ConversionUtils.toVector3(tri.vertices.get(0).pos);
-                    final Vector3 p2 = ConversionUtils.toVector3(tri.vertices.get(1).pos);
-                    final Vector3 p3 = ConversionUtils.toVector3(tri.vertices.get(2).pos);
-                    builder.triangle(p1, p2, p3);
-                }));
         builder.end();
         if (meshPart.mesh.getNumVertices() > 3) {
             parts.add(new NodePart(meshPart, createDefaultMaterial(color)));
@@ -130,9 +116,10 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
      * @param meshPart with meshPart.offset = 0 meshPart.size = mesh.getNumIndices()
      */
     private void recenter(MeshPart meshPart) {
-        setPosition(meshPart.center);
-        meshPart.mesh.transform(new Matrix4().translate(-meshPart.center.x, -meshPart.center.y, -meshPart.center.z));
-        meshPart.center.set(0, 0, 0);
+        setOrigin(meshPart.center);
+//        setPosition(meshPart.center);
+//        meshPart.mesh.transform(new Matrix4().translate(-meshPart.center.x, -meshPart.center.y, -meshPart.center.z));
+//        meshPart.center.set(0, 0, 0);
     }
 
     public static SketchNode fromJSONObject(JSONObject jsonObject) throws JSONException {
@@ -223,7 +210,7 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         validate();
         boolean rayTest;
         transformedRay.set(ray).mul(inverseTransform);
-        rayTest = polygonAABBTree.rayTest(ray, intersection);
+        rayTest = Intersector.intersectRayBounds(ray, bounds, intersection.hitPoint);
         if (rayTest) {
             intersection.hitPoint.mul(getTransform());
             intersection.t = ray.origin.dst(intersection.hitPoint);
@@ -268,7 +255,7 @@ public class SketchNode extends Node implements AABBTree.AABBObject {
         validate();
         final SketchNode node;
         if (parts.size > 0)
-            node = new SketchNode(polygons);
+            node = new SketchNode(getDiffuseColor());
         else
             return null;
         node.translation.set(translation);

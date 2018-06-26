@@ -60,7 +60,6 @@ import net.masonapps.sketchvr.modeling.ui.PlanarPointsInput;
 import net.masonapps.sketchvr.modeling.ui.SingleNodeSelector;
 import net.masonapps.sketchvr.sketch.SketchInput;
 import net.masonapps.sketchvr.ui.ExportDialog;
-import net.masonapps.sketchvr.ui.NumberInputWindow;
 import net.masonapps.sketchvr.ui.RenderableInput;
 import net.masonapps.sketchvr.ui.ShapeRenderableInput;
 
@@ -298,9 +297,9 @@ public class MainScreen extends VrWorldScreen implements SolidModelingGame.OnCon
         mainInterface.addProcessor(exportDialog);
 
         // TODO: 6/21/2018 remove test and make permanent 
-        final NumberInputWindow numberInputWindow = new NumberInputWindow(spriteBatch, skin, Style.createWindowVrStyle(skin));
-        numberInputWindow.setPosition(0, 0, -2);
-        mainInterface.addProcessor(numberInputWindow);
+//        final NumberInputWindow numberInputWindow = new NumberInputWindow(spriteBatch, skin, Style.createWindowVrStyle(skin));
+//        numberInputWindow.setPosition(0, 0, -2);
+//        mainInterface.addProcessor(numberInputWindow);
 
         inputProcessorChooser = new InputProcessorChooser();
 
