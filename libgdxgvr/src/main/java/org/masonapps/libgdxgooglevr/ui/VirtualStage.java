@@ -311,7 +311,7 @@ public class VirtualStage extends Stage implements VrInputProcessor {
         plane.set(translation, normal);
 
         bounds.set(0, 0, getViewport().getCamera().viewportWidth * pixelSizeWorld * scale.x, getViewport().getCamera().viewportHeight * pixelSizeWorld * scale.y);
-        
+
         radius = (float) Math.sqrt(bounds.width * bounds.width + bounds.height * bounds.height);
         transform.idt().translate(translation).rotate(rotation).translate(-bounds.getWidth() * 0.5f, -bounds.getHeight() * 0.5f, 0).scale(pixelSizeWorld * scale.x, pixelSizeWorld * scale.y, 1f);
         Pools.free(normal);

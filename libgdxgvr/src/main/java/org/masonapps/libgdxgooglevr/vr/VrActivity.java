@@ -105,12 +105,12 @@ public class VrActivity extends Activity {
         app.vrApplicationAdapter = adapter;
         Gdx.app = app;
         GdxVr.app = app;
-        
+
         final GvrAudioEngine gvrAudioEngine = new GvrAudioEngine(this, GvrAudioEngine.RenderingMode.BINAURAL_LOW_QUALITY);
         app.audio = new VrAudio(gvrAudioEngine);
         Gdx.audio = app.getAudio();
         GdxVr.audio = (VrAudio) app.getAudio();
-        
+
         app.graphics = new VrGraphics(app, new WeakReference<>(surfaceView), gvrLayout.getGvrApi(), gvrAudioEngine);
         Gdx.graphics = app.graphics;
         GdxVr.graphics = app.graphics;
@@ -123,15 +123,15 @@ public class VrActivity extends Activity {
         app.input.setController(controller);
         Gdx.input = app.input;
         GdxVr.input = app.input;
-        
+
         app.files = new AndroidFiles(this.getAssets(), this.getFilesDir().getAbsolutePath());
         Gdx.files = app.getFiles();
         GdxVr.files = app.getFiles();
-        
+
         app.net = new AndroidNet(app);
         Gdx.net = app.getNet();
         GdxVr.net = app.getNet();
-        
+
         app.handler = new Handler();
     }
 

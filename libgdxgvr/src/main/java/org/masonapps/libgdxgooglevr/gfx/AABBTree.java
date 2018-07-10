@@ -265,10 +265,5 @@ public class AABBTree {
         public Vector3 hitPoint = new Vector3();
         @Nullable
         public AABBObject object = null;
-
-        @Override
-        public String toString() {
-            return "hitPoint = " + hitPoint + ", t = " + t + ", object = " + (object == null ? "null" : (object.getClass().getSimpleName() + ": " + object.toString()));
-        }
     }
 }
